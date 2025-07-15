@@ -1,165 +1,221 @@
 import React, { useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 
-const floatingPinkPurple = {
-  animation: "float 8s ease-in-out infinite",
-};
-const floatingGray = {
-  animation: "float2 10s ease-in-out infinite",
-};
-
 export default function LoginPage() {
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [mode, setMode] = useState<'login' | 'signup' | 'forgot'>("login");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [mobile, setMobile] = useState("+91");
+  const [city, setCity] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  // Helper for mobile validation
+  const isValidMobile = (value: string) => {
+    // Must start with +91, then 10 digits
+    return /^\+91[0-9]{10}$/.test(value);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => setLoading(false), 1200);
+    setMessage(null);
+    if (mode === "login") {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) setMessage(error.message);
+      else setMessage("Login successful!");
+    } else if (mode === "signup") {
+      // Sign up validation
+      if (password !== confirmPassword) {
+        setMessage("Passwords do not match.");
+        setLoading(false);
+        return;
+      }
+      if (!isValidMobile(mobile)) {
+        setMessage("Mobile number must be +91 followed by 10 digits.");
+        setLoading(false);
+        return;
+      }
+      if (!fullName || !city) {
+        setMessage("Please fill all fields.");
+        setLoading(false);
+        return;
+      }
+      // Sign up with metadata
+      const { error, data } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+            mobile,
+            city,
+          },
+        },
+      });
+      if (!error && data?.user) {
+        // Insert into profiles table
+        const { error: dbError } = await supabase
+          .from('profiles')
+          .insert([
+            {
+              id: data.user.id,
+              email,
+              full_name: fullName,
+              mobile,
+              city,
+            },
+          ]);
+        if (dbError) {
+          setMessage("Sign up successful, but failed to save profile info.");
+        } else {
+          setMessage("Sign up successful! You can now log in.");
+        }
+        setTimeout(() => {
+          setMode("login");
+          setMessage("Sign up successful! Please log in.");
+        }, 2000);
+      }
+    } else if (mode === "forgot") {
+      // Password reset
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      if (error) setMessage(error.message);
+      else setMessage("Password reset email sent! Please check your inbox.");
+    }
+    setLoading(false);
   };
 
-  const handleGoogleLogin = () => {
+  const handleGoogleAuth = async () => {
     setGoogleLoading(true);
-    setTimeout(() => setGoogleLoading(false), 1200);
+    setMessage(null);
+    const { error } = await supabase.auth.signInWithOAuth({ provider: "google" });
+    if (error) setMessage(error.message);
+    setGoogleLoading(false);
   };
 
   return (
-    <div
-      className="relative min-h-screen flex items-center justify-center bg-[#121212] overflow-hidden font-sans"
-      style={{ fontFamily: "Inter, Noto Sans, sans-serif" }}
-    >
-      {/* Floating gradient circles */}
-      <div
-        className="absolute top-[-120px] left-[-120px] w-[340px] h-[340px] rounded-full z-0"
-        style={{
-          ...floatingPinkPurple,
-          background:
-            "radial-gradient(circle at 30% 30%, #ff4da6 60%, #7c3aed 100%)",
-          opacity: 0.55,
-        }}
-      />
-      <div
-        className="absolute top-10 right-[-60px] w-[160px] h-[160px] rounded-full z-0"
-        style={{
-          ...floatingGray,
-          background:
-            "radial-gradient(circle at 70% 40%, #23222a 60%, #000 100%)",
-          opacity: 0.45,
-        }}
-      />
-      {/* Centered card */}
-      <div className="relative z-10 w-full max-w-md mx-auto bg-[#18171d]/90 rounded-2xl shadow-2xl px-6 py-8 sm:px-10 sm:py-12 flex flex-col items-center border border-[#23222a] backdrop-blur-md animate-fade-in">
-        <h2 className="text-white text-3xl font-bold mb-8 text-center tracking-tight">
-          Sign in.
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-black to-purple-900">
+      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-md w-80 flex flex-col gap-4">
+        <h2 className="text-2xl font-bold mb-2 text-center">
+          {mode === "login" ? "Sign in." : mode === "signup" ? "Sign up." : "Reset Password"}
         </h2>
-        <div className="w-full flex flex-col gap-4 mb-4">
-          <Button
-            variant="outline"
-            className="w-full rounded-full border border-white/30 text-white font-medium flex items-center gap-2 py-4 text-base hover:bg-white/10 transition-colors"
-            onClick={handleGoogleLogin}
-            type="button"
-            disabled={googleLoading}
-          >
-            {/* Google Icon */}
-            <svg width="20" height="20" viewBox="0 0 48 48">
-              <g>
-                <path
-                  fill="#4285F4"
-                  d="M24 9.5c3.54 0 6.71 1.22 9.21 3.61l6.85-6.85C35.63 2.7 30.23 0 24 0 14.82 0 6.73 5.82 2.69 14.09l7.98 6.19C12.36 13.13 17.73 9.5 24 9.5z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M46.1 24.55c0-1.64-.15-3.22-.42-4.74H24v9.01h12.42c-.54 2.9-2.18 5.36-4.66 7.01l7.19 5.59C43.98 37.13 46.1 31.36 46.1 24.55z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M10.67 28.18a14.5 14.5 0 0 1 0-8.36l-7.98-6.19A23.97 23.97 0 0 0 0 24c0 3.77.9 7.34 2.69 10.45l7.98-6.27z"
-                />
-                <path
-                  fill="#EA4335"
-                  d="M24 48c6.23 0 11.45-2.06 15.26-5.61l-7.19-5.59c-2.01 1.35-4.59 2.16-8.07 2.16-6.27 0-11.64-3.63-13.33-8.64l-7.98 6.27C6.73 42.18 14.82 48 24 48z"
-                />
-                <path fill="none" d="M0 0h48v48H0z" />
-              </g>
-            </svg>
-            Continue with Google
-          </Button>
-        </div>
-        <div className="w-full flex items-center my-4">
-          <Separator className="flex-grow bg-white/10" />
-          <span className="mx-3 text-[#b0b0b0] text-xs font-medium">or</span>
-          <Separator className="flex-grow bg-white/10" />
-        </div>
-        <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">
+        {mode !== "forgot" && (
+          <>
+            <Button
+              type="button"
+              onClick={handleGoogleAuth}
+              disabled={googleLoading}
+              className="w-full flex items-center justify-center gap-3 border border-gray-300 bg-white text-gray-800 font-medium py-2 rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <g>
+                  <path d="M21.805 10.023h-9.765v3.977h5.617c-.242 1.242-1.484 3.648-5.617 3.648-3.375 0-6.125-2.789-6.125-6.25s2.75-6.25 6.125-6.25c1.922 0 3.211.766 3.953 1.477l2.703-2.625c-1.703-1.57-3.906-2.523-6.656-2.523-5.523 0-10 4.477-10 10s4.477 10 10 10c5.75 0 9.547-4.023 9.547-9.695 0-.652-.07-1.148-.156-1.602z" fill="#4285F4"/>
+                  <path d="M3.545 7.545l3.273 2.402c.891-1.781 2.578-2.947 4.457-2.947 1.312 0 2.484.453 3.406 1.344l2.555-2.555c-1.484-1.383-3.406-2.164-5.961-2.164-3.672 0-6.75 2.484-7.867 5.82z" fill="#34A853"/>
+                  <path d="M12.002 22c2.484 0 4.547-.82 6.062-2.234l-2.789-2.273c-.766.523-1.75.828-3.273.828-2.523 0-4.664-1.703-5.43-4.008l-3.32 2.57c1.523 3.211 4.844 5.117 8.75 5.117z" fill="#FBBC05"/>
+                  <path d="M21.805 10.023h-9.765v3.977h5.617c-.242 1.242-1.484 3.648-5.617 3.648-3.375 0-6.125-2.789-6.125-6.25s2.75-6.25 6.125-6.25c1.922 0 3.211.766 3.953 1.477l2.703-2.625c-1.703-1.57-3.906-2.523-6.656-2.523-5.523 0-10 4.477-10 10s4.477 10 10 10c5.75 0 9.547-4.023 9.547-9.695 0-.652-.07-1.148-.156-1.602z" fill="#EA4335"/>
+                </g>
+              </svg>
+              {googleLoading ? "Signing in..." : "Sign in with Google"}
+            </Button>
+            <Separator />
+          </>
+        )}
+        <Input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          required
+        />
+        {mode === "login" && (
           <Input
-            name="email"
-            type="email"
-            placeholder="Email"
-            value={form.email}
-            onChange={handleChange}
-            className="w-full rounded-full border border-white/20 bg-[#1e1e1e] px-5 py-3 text-white placeholder:text-[#b0b0b0] focus:outline-none focus:ring-2 focus:ring-[#ff4da6] text-base"
-            required
-          />
-          <Input
-            name="password"
             type="password"
             placeholder="Password"
-            value={form.password}
-            onChange={handleChange}
-            className="w-full rounded-full border border-white/20 bg-[#1e1e1e] px-5 py-3 text-white placeholder:text-[#b0b0b0] focus:outline-none focus:ring-2 focus:ring-[#ff4da6] text-base"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
             required
           />
-          <Button
-            type="submit"
-            className="w-full rounded-full py-3 font-bold text-white text-base bg-gradient-to-r from-[#ff007a] to-[#ff4da6] shadow-md hover:shadow-lg hover:scale-[1.03] transition-all duration-200 disabled:opacity-60 mt-2"
-            disabled={loading}
-          >
-            {loading ? "Signing in..." : "Sign in"}
-          </Button>
-        </form>
-        <div className="w-full flex flex-col items-center mt-6 gap-2">
-          <span className="text-white text-sm">
-            Don’t have an account?{" "}
-            <a
-              href="/signup"
-              className="underline hover:text-[#ff4da6] transition-colors"
-            >
-              Create Account
-            </a>
-          </span>
-          <a
-            href="#"
-            className="text-white text-sm font-bold underline hover:text-[#ff4da6] transition-colors"
-          >
-            Forgot Password?
-          </a>
+        )}
+        {mode === "signup" && (
+          <>
+            <Input
+              type="password"
+              placeholder="Confirm Password"
+              value={confirmPassword}
+              onChange={e => setConfirmPassword(e.target.value)}
+              required
+            />
+            <Input
+              type="text"
+              placeholder="Full Name"
+              value={fullName}
+              onChange={e => setFullName(e.target.value)}
+              required
+            />
+            <Input
+              type="text"
+              placeholder="Mobile Number (e.g. +911234567890)"
+              value={mobile}
+              onChange={e => setMobile(e.target.value)}
+              required
+              maxLength={13}
+            />
+            <Input
+              type="text"
+              placeholder="City"
+              value={city}
+              onChange={e => setCity(e.target.value)}
+              required
+            />
+          </>
+        )}
+        {mode === "forgot" && (
+          <div className="text-sm text-gray-700 mb-2">Enter your email to receive a password reset link.</div>
+        )}
+        <Button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-pink-500 to-purple-500 text-white">
+          {loading
+            ? mode === "login"
+              ? "Signing in..."
+              : mode === "signup"
+              ? "Signing up..."
+              : "Sending..."
+            : mode === "login"
+            ? "Sign in"
+            : mode === "signup"
+            ? "Sign up"
+            : "Send Reset Link"}
+        </Button>
+        <Separator />
+        <div className="text-center text-sm">
+          {mode === "login" ? (
+            <>
+              Don&apos;t have an account?{' '}
+              <button type="button" className="text-purple-600 underline" onClick={() => setMode("signup")}>Create Account</button>
+              <br />
+              <button type="button" className="text-purple-600 underline" onClick={() => setMode("forgot")}>Forgot Password?</button>
+            </>
+          ) : mode === "signup" ? (
+            <>
+              Already have an account?{' '}
+              <button type="button" className="text-purple-600 underline" onClick={() => setMode("login")}>Sign in</button>
+            </>
+          ) : (
+            <>
+              Remembered your password?{' '}
+              <button type="button" className="text-purple-600 underline" onClick={() => setMode("login")}>Back to Sign in</button>
+            </>
+          )}
         </div>
-      </div>
-      {/* Custom keyframes for floating and fade-in */}
-      <style>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0) scale(1); }
-          50% { transform: translateY(30px) scale(1.04); }
-        }
-        @keyframes float2 {
-          0%, 100% { transform: translateY(0) scale(1); }
-          50% { transform: translateY(-20px) scale(1.02); }
-        }
-        .animate-fade-in {
-          animation: fadeIn 1.2s cubic-bezier(.39,.575,.565,1) both;
-        }
-        @keyframes fadeIn {
-          0% { opacity: 0; transform: translateY(40px) scale(0.98); }
-          100% { opacity: 1; transform: translateY(0) scale(1); }
-        }
-      `}</style>
+        {message && (
+          <div className="text-center text-sm text-red-600 mt-2">{message}</div>
+        )}
+      </form>
     </div>
   );
 }
