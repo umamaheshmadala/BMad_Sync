@@ -1,0 +1,3 @@
+# Problem Statement
+Brick-and-mortar businesses struggle to instantly update customers on offerings and stay connected during non-shopping times, leading to reduced footfall despite the "feel the product" value proposition. This puts them at a disadvantage compared to e-commerce businesses that excel at instant customer updates, offers, and promotions. SynC aims to solve this by providing a unified platform for discovery, engagement, and rewards, leveraging social features to drive organic growth and retention for businesses.
+

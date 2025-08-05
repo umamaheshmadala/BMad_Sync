@@ -1,0 +1,3 @@
+# Executive Summary
+SynC is a user-friendly web application designed to connect users with Hyperlocal businesses, facilitate social interactions, and enable gamified coupon sharing and incentives. It aims to bridge the gap faced by physical stores in instantly reaching customers with updates and staying connected during non-shopping times, a challenge e-commerce businesses have overcome. The product will enhance user engagement by offering a single channel for business exploration and digital coupon management, while providing businesses with a targeted, cost-effective marketing approach for customer acquisition and retention.
+
