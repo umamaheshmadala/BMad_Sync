@@ -1,0 +1,19 @@
+[[edge_functions]]
+path = "/api/auth/signup"
+function = "auth/signup.ts"
+
+[[edge_functions]]
+path = "/api/auth/login"
+function = "auth/login.ts"
+
+[[edge_functions]]
+path = "/api/user/create"
+function = "user/create.ts"
+
+[[edge_functions]]
+path = "/api/user/update"
+function = "user/update.ts"
+
+[[edge_functions]]
+path = "/api/user/get"
+function = "user/get.ts"
