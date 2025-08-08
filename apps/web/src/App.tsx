@@ -19,6 +19,8 @@ function App() {
 
   const handleLogout = async () => {
     await logout();
+    // Redirect to login after clearing state to avoid being stuck on protected routes
+    window.location.href = '/login';
   };
 
   if (loading) {

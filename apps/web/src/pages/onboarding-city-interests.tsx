@@ -72,19 +72,19 @@ const OnboardingCityInterests = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-900 dark:bg-gray-950 p-4 sm:p-6 lg:p-8">
-      <div className="bg-gray-800 dark:bg-gray-900 p-8 rounded-lg shadow-xl w-full max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
-        <h2 className="text-3xl font-extrabold mb-8 text-center text-white dark:text-gray-100">Welcome! Tell us about yourself.</h2>
+    <div className="min-h-screen flex items-center justify-center bg-background text-foreground p-4 sm:p-6 lg:p-8">
+      <div className="bg-card text-card-foreground p-8 rounded-lg shadow-sm border border-border w-full max-w-3xl">
+        <h2 className="text-3xl font-extrabold mb-8 text-center">Welcome! Tell us about yourself.</h2>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="city" className="block text-sm font-medium text-gray-300 dark:text-gray-400 mb-1">Select your City</label>
+            <label htmlFor="city" className="block text-sm font-medium text-muted-foreground mb-1">Select your City</label>
             <select
               id="city"
               name="city"
               value={selectedCity}
               onChange={(e) => setSelectedCity(e.target.value)}
               required
-              className="appearance-none block w-full px-4 py-2 border border-gray-700 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-700 text-white dark:bg-gray-800 dark:text-gray-100"
+              className="appearance-none block w-full px-4 py-2 border rounded-md shadow-sm placeholder-gray-500 focus:outline-none focus:ring-ring focus:border-ring sm:text-sm bg-muted text-foreground"
             >
               <option value="">Select a city</option>
               {cities.map((city) => (
@@ -96,7 +96,7 @@ const OnboardingCityInterests = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 dark:text-gray-400 mb-1">Select at least 5 Interests</label>
+            <label className="block text-sm font-medium text-muted-foreground mb-1">Select at least 5 Interests</label>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
               {interests.map((interest) => (
                 <div key={interest} className="flex items-center">
@@ -107,15 +107,15 @@ const OnboardingCityInterests = () => {
                     value={interest}
                     checked={selectedInterests.includes(interest)}
                     onChange={() => handleInterestChange(interest)}
-                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-primary focus:ring-ring border-input rounded"
                   />
-                  <label htmlFor={interest} className="ml-2 text-sm text-gray-300 dark:text-gray-400">
+                  <label htmlFor={interest} className="ml-2 text-sm text-muted-foreground">
                     {interest}
                   </label>
                 </div>
               ))}
             </div>
-            {error && <p className="text-red-400 text-sm mt-2 text-center">{error}</p>}
+            {error && <p className="text-destructive text-sm mt-2 text-center">{error}</p>}
           </div>
 
           <button

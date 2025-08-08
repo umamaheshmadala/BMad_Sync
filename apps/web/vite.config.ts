@@ -10,10 +10,14 @@ export default defineConfig({
       name: 'open-chrome-incognito',
       configureServer(server) {
         let opened = false
-        const url = 'http://localhost:5173/'
         server.httpServer?.once('listening', () => {
           if (opened) return
           opened = true
+          // Resolve the actual port Vite selected (in case 5173 was taken)
+          const address = server.httpServer!.address()
+          // address can be string or AddressInfo
+          const port = typeof address === 'object' && address && 'port' in address ? (address as any).port : (server.config.server?.port ?? 5173)
+          const url = `http://localhost:${port}/`
           const launch = async () => {
             try {
               await open(url, { app: { name: 'chrome', arguments: ['--incognito'] } })
@@ -35,5 +39,8 @@ export default defineConfig({
   },
   server: {
     open: false, // Do not auto-open via Vite; handled by plugin above
+    // Optional: uncomment to force using 5173 and fail fast if taken
+    // port: 5173,
+    // strictPort: true,
   },
 })

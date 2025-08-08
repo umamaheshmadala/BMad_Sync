@@ -129,6 +129,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     };
   }, []);
 
+  const withTimeout = async <T,>(promise: Promise<T>, ms: number, label: string): Promise<T | null> => {
+    let timeoutId: any;
+    try {
+      const result = await Promise.race<Promise<T | null>>([
+        promise as unknown as Promise<T>,
+        new Promise<null>((resolve) => {
+          timeoutId = setTimeout(() => {
+            console.warn(`${label}: timed out after ${ms}ms`);
+            resolve(null);
+          }, ms);
+        }),
+      ]);
+      return result as T | null;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  };
+
   const signIn = async (email: string, password: string) => {
     console.log("signIn: Attempting sign in for", email);
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -213,12 +231,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const logout = async () => {
     console.log("signOut: Attempting sign out.");
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error("signOut: Error during sign out:", error);
-      // Do not throw in UI context; leave state unchanged and surface error via console
-      return;
+    // Never hang the UI on sign-out; proceed after max 3s
+    try {
+      const result = await withTimeout(supabase.auth.signOut(), 3000, 'signOut');
+      const error = (result as any)?.error;
+      if (error) console.error("signOut: Error during sign out:", error);
+    } catch (e) {
+      console.error("signOut: Exception during sign out:", e);
     }
+    // Always clear local auth state, even if remote signOut fails
     setUser(null);
     setUserProfile(null);
     setBusinessProfile(null);
@@ -285,10 +306,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       throw new Error("User not logged in");
     }
 
-    const { error } = await supabase
-      .from("users")
-      .update(updates)
-      .eq("user_id", (await user).data.user?.id);
+    const updateResult = await withTimeout(
+      supabase
+        .from("users")
+        .update(updates)
+        .eq("user_id", (await user).data.user?.id),
+      7000,
+      'updateUserProfile'
+    );
+    const error = (updateResult as any)?.error ?? null;
 
     if (error) {
       console.error("updateUserProfile: Error updating user profile:", error);
@@ -297,11 +323,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     await getUserProfile((await user).data.user?.id || "");
     console.log("updateUserProfile: User profile updated, re-fetching onboarding status.");
     // After updating the profile, re-fetch the onboarding status
-    const { data: profileData } = await supabase
-      .from('users')
-      .select('onboarding_complete')
-      .eq('user_id', (await user).data.user?.id)
-      .single();
+    const statusResult = await withTimeout(
+      supabase
+        .from('users')
+        .select('onboarding_complete')
+        .eq('user_id', (await user).data.user?.id)
+        .single(),
+      5000,
+      'updateUserProfile:fetchOnboarding'
+    );
+    const profileData = (statusResult as any)?.data;
 
     if (profileData && (profileData.onboarding_complete === true)) {
       setOnboardingComplete(true);
