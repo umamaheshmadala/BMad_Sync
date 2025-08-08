@@ -75,8 +75,10 @@ describe('Preferences', () => {
       expect(screen.getByLabelText('Ad Frequency:')).toHaveValue('medium');
     });
 
-    userEvent.selectOptions(screen.getByLabelText('Ad Frequency:'), 'low');
-    expect(screen.getByLabelText('Ad Frequency:')).toHaveValue('low');
+    await userEvent.selectOptions(screen.getByLabelText('Ad Frequency:'), 'low');
+    await waitFor(() => {
+      expect(screen.getByLabelText('Ad Frequency:')).toHaveValue('low');
+    });
   });
 
   test('handles exclude categories change', async () => {
@@ -91,11 +93,15 @@ describe('Preferences', () => {
       expect(screen.getByLabelText('Food')).not.toBeChecked();
     });
 
-    userEvent.click(screen.getByLabelText('Food'));
-    expect(screen.getByLabelText('Food')).toBeChecked();
+    await userEvent.click(screen.getByLabelText('Food'));
+    await waitFor(() => {
+      expect(screen.getByLabelText('Food')).toBeChecked();
+    });
 
-    userEvent.click(screen.getByLabelText('Tech'));
-    expect(screen.getByLabelText('Tech')).not.toBeChecked();
+    await userEvent.click(screen.getByLabelText('Tech'));
+    await waitFor(() => {
+      expect(screen.getByLabelText('Tech')).not.toBeChecked();
+    });
   });
 
   test('submits preferences successfully', async () => {

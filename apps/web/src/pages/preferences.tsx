@@ -84,11 +84,11 @@ const Preferences: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto p-6 bg-white rounded-lg shadow-md mt-8">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Ad Preferences</h2>
+    <div className="container mx-auto p-6 bg-card text-card-foreground rounded-lg shadow-sm border border-border mt-8">
+      <h2 className="text-2xl font-bold mb-6">Ad Preferences</h2>
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
-          <label htmlFor="adFrequency" className="block text-gray-700 text-sm font-bold mb-2">
+          <label htmlFor="adFrequency" className="block text-sm font-bold mb-2 text-muted-foreground">
             Ad Frequency:
           </label>
           <select
@@ -96,7 +96,7 @@ const Preferences: React.FC = () => {
             name="adFrequency"
             value={privacySettings.adFrequency}
             onChange={handleFrequencyChange}
-            className="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            className="border border-border rounded w-full py-2 px-3 bg-muted text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           >
             <option value="low">Low</option>
             <option value="medium">Medium</option>
@@ -105,7 +105,7 @@ const Preferences: React.FC = () => {
         </div>
 
         <div className="mb-6">
-          <label className="block text-gray-700 text-sm font-bold mb-2">
+          <label className="block text-sm font-bold mb-2 text-muted-foreground">
             Exclude Categories:
           </label>
           <div className="flex flex-wrap gap-4">
@@ -117,9 +117,9 @@ const Preferences: React.FC = () => {
                   value={category}
                   checked={privacySettings.excludeCategories.includes(category)}
                   onChange={handleCategoryChange}
-                  className="form-checkbox h-5 w-5 text-blue-600"
+                  className="form-checkbox h-5 w-5 text-primary"
                 />
-                <span className="ml-2 text-gray-700">{category}</span>
+                <span className="ml-2">{category}</span>
               </label>
             ))}
           </div>
@@ -127,13 +127,13 @@ const Preferences: React.FC = () => {
 
         <button
           type="submit"
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-ring"
           disabled={loading}
         >
           {loading ? 'Saving...' : 'Save Preferences'}
         </button>
-        {success && <p className="text-green-500 text-sm mt-2">{success}</p>}
-        {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+        {success && <p className="text-green-600 text-sm mt-2">{success}</p>}
+        {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
       </form>
     </div>
   );

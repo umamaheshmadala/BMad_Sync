@@ -6,3 +6,7 @@ import { TextEncoder } from 'util';
 if (typeof global.TextEncoder === 'undefined') {
   global.TextEncoder = TextEncoder;
 }
+
+// Ensure window.alert is a mock function for tests
+// @ts-ignore
+window.alert = jest.fn();

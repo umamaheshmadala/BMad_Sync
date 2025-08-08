@@ -13,6 +13,7 @@ const EditProfile = () => {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [formErrors, setFormErrors] = useState<ProfileFormErrors>({});
   const [userId, setUserId] = useState<string | null>(null);
   const [profileExists, setProfileExists] = useState(false);
@@ -66,7 +67,14 @@ const EditProfile = () => {
       return;
     }
 
-    if (!userId) {
+    let ensuredUserId = userId;
+    if (!ensuredUserId) {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        ensuredUserId = session?.user?.id ?? null;
+      } catch {}
+    }
+    if (!ensuredUserId) {
       setError("User ID not available.");
       setLoading(false);
       return;
@@ -75,7 +83,7 @@ const EditProfile = () => {
     let avatarUrl = '';
     if (avatarFile) {
       try {
-        avatarUrl = await uploadAvatar(userId, avatarFile);
+        avatarUrl = await uploadAvatar(ensuredUserId, avatarFile);
       } catch (err: any) {
         setError(`Error uploading avatar: ${err.message}`);
         setLoading(false);
@@ -84,7 +92,7 @@ const EditProfile = () => {
     }
 
     const profileData = {
-      userId,
+      userId: ensuredUserId,
       fullName,
       preferredName,
       ...(avatarUrl && { avatarUrl }),
@@ -93,11 +101,11 @@ const EditProfile = () => {
     try {
       if (profileExists) {
         await updateUserProfile(profileData);
-        alert("Profile updated successfully!");
+        setSuccessMessage("Profile updated successfully!");
       } else {
         await createUserProfile(profileData);
         setProfileExists(true);
-        alert("Profile created successfully!");
+        setSuccessMessage("Profile created successfully!");
       }
     } catch (err: any) {
       setError(`Error saving profile: ${err.message}`);
@@ -129,7 +137,6 @@ const EditProfile = () => {
                 name="fullName"
                 type="text"
                 autoComplete="name"
-                required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-700 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-white bg-gray-700 dark:bg-gray-800 rounded-t-md focus:outline-none focus:ring-ring focus:border-ring focus:z-10 sm:text-sm"
                 placeholder="Full Name"
                 value={fullName}
@@ -166,6 +173,7 @@ const EditProfile = () => {
 
           {loading && <p className="text-center text-primary">Saving profile...</p>}
           {error && <p className="text-center text-red-400">{error}</p>}
+          {successMessage && <p className="text-center text-green-500">{successMessage}</p>}
 
           <div>
             <button

@@ -24,7 +24,7 @@ interface AuthContextType {
   logout: () => Promise<void>; // Add this line
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -160,7 +160,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         setOnboardingComplete(false);
         console.log("signIn: Onboarding not complete after sign in.");
       }
-      if (data.user.user_metadata.is_business) {
+      if (data.user?.user_metadata?.is_business) {
         await getBusinessProfile(data.user.id);
         console.log("signIn: Business profile fetched after sign in.");
       }
@@ -201,7 +201,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         setOnboardingComplete(false);
         console.log("signUp: Onboarding not complete after sign up.");
       }
-      if (data.user.user_metadata.is_business) {
+      if (data.user?.user_metadata?.is_business) {
         await getBusinessProfile(data.user.id);
         console.log("signUp: Business profile fetched after sign up.");
       }
@@ -216,7 +216,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const { error } = await supabase.auth.signOut();
     if (error) {
       console.error("signOut: Error during sign out:", error);
-      throw error;
+      // Do not throw in UI context; leave state unchanged and surface error via console
+      return;
     }
     setUser(null);
     setUserProfile(null);
@@ -321,7 +322,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         onboardingComplete,
         signIn,
         signUp,
-        logout, // Changed from signOut
+        logout,
+        // Provide signOut alias to maintain backward compatibility with tests/components
+        signOut: logout,
         getUserProfile,
         getBusinessProfile,
         updateUserProfile,

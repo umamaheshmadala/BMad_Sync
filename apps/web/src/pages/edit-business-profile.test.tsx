@@ -5,20 +5,24 @@ import EditBusinessProfile from './edit-business-profile';
 import * as supabaseClientModule from '../lib/supabaseClient';
 
 // Mock the supabase client
+// stable bucket instance to allow call-site equality and call tracking
+const storageBucketMock = {
+  upload: jest.fn(() => Promise.resolve({ data: { path: 'test-logo-url' }, error: null })),
+  getPublicUrl: jest.fn(() => ({ data: { publicUrl: 'http://localhost/test-logo-url' }})),
+};
+const businessesTableMock = {
+  upsert: jest.fn(() => Promise.resolve({ data: {}, error: null })),
+};
+
 jest.mock('../lib/supabaseClient', () => ({
   supabase: {
     auth: {
       getUser: jest.fn(() => Promise.resolve({ data: { user: { id: 'test-business-id', email: 'test@business.com' } } })),
     },
     storage: {
-      from: jest.fn(() => ({
-        upload: jest.fn(() => Promise.resolve({ data: { path: 'test-logo-url' }, error: null })),
-        getPublicUrl: jest.fn(() => ({ data: { publicUrl: 'http://localhost/test-logo-url' }})),
-      })),
+      from: jest.fn(() => storageBucketMock),
     },
-    from: jest.fn(() => ({
-      upsert: jest.fn(() => Promise.resolve({ data: {}, error: null })),
-    })),
+    from: jest.fn((table: string) => (table === 'businesses' ? businessesTableMock : { upsert: jest.fn() })),
   },
 }));
 
@@ -108,7 +112,7 @@ describe('EditBusinessProfile', () => {
       target: { value: '5 PM' },
     });
     fireEvent.change(screen.getByLabelText(/Holidays:/i), {
-      target: { value: 'New Year's Day' },
+      target: { value: "New Year's Day" },
     });
 
     const file = new File(['dummy content'], 'logo.png', { type: 'image/png' });
@@ -121,16 +125,9 @@ describe('EditBusinessProfile', () => {
     await waitFor(() => {
       expect(supabaseClientModule.supabase.auth.getUser).toHaveBeenCalled();
       expect(supabaseClientModule.supabase.storage.from).toHaveBeenCalledWith('business-logos');
-      expect(supabaseClientModule.supabase.storage.from('business-logos').upload).toHaveBeenCalledWith(
-        'test-business-id.png',
-        file,
-        {
-          cacheControl: '3600',
-          upsert: true,
-        }
-      );
+      expect(storageBucketMock.upload).toHaveBeenCalledWith('test-business-id.png', file, { cacheControl: '3600', upsert: true });
       expect(supabaseClientModule.supabase.from).toHaveBeenCalledWith('businesses');
-      expect(supabaseClientModule.supabase.from('businesses').upsert).toHaveBeenCalledWith(expect.objectContaining({
+      expect(businessesTableMock.upsert).toHaveBeenCalledWith(expect.objectContaining({
         business_name: 'Test Business',
         address: '123 Test St',
         logo_url: 'test-logo-url',
@@ -142,9 +139,9 @@ describe('EditBusinessProfile', () => {
   });
 
   it('handles submission error', async () => {
-    jest.spyOn(supabaseClientModule.supabase.from('businesses'), 'upsert').mockImplementationOnce(() =>
-      Promise.resolve({ data: null, error: { message: 'Database error' } } as any)
-    );
+    (supabaseClientModule.supabase.from as jest.Mock).mockReturnValueOnce({
+      upsert: jest.fn(() => Promise.resolve({ data: null, error: { message: 'Database error' } })),
+    } as any);
 
     render(
       <Router>

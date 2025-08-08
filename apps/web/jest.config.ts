@@ -7,6 +7,9 @@ const config: Config.InitialOptions = {
   moduleNameMapper: {
     '\\.(css|less|sass|scss)$': 'identity-obj-proxy',
     '\\.(gif|ttf|eot|svg|png)$': '<rootDir>/src/__mocks__/fileMock.js',
+    '^../lib/supabaseClient$': '<rootDir>/src/__mocks__/supabaseClient.ts',
+    '^./lib/supabaseClient$': '<rootDir>/src/__mocks__/supabaseClient.ts',
+    '^src/lib/supabaseClient$': '<rootDir>/src/__mocks__/supabaseClient.ts',
   },
   transform: {
     '^.+\\.tsx?$': ['ts-jest', {

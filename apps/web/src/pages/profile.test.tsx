@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 import Profile from './profile';
 import { supabase } from '../lib/supabaseClient';
@@ -38,7 +39,11 @@ describe('Profile', () => {
 
   test('renders loading state initially', () => {
     (userApi.getUserProfile as jest.Mock).mockReturnValue(new Promise(() => {})); // Never resolves
-    render(<Profile />);
+    render(
+      <MemoryRouter>
+        <Profile />
+      </MemoryRouter>
+    );
     expect(screen.getByText(/Loading profile.../i)).toBeInTheDocument();
   });
 
@@ -50,7 +55,11 @@ describe('Profile', () => {
     };
     (userApi.getUserProfile as jest.Mock).mockResolvedValue({ data: mockProfile });
 
-    render(<Profile />);
+    render(
+      <MemoryRouter>
+        <Profile />
+      </MemoryRouter>
+    );
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: /User Profile/i })).toBeInTheDocument();
@@ -62,15 +71,23 @@ describe('Profile', () => {
 
   test('displays error message if profile fetch fails', async () => {
     (userApi.getUserProfile as jest.Mock).mockRejectedValue(new Error('Network Error'));
-    render(<Profile />);
+    render(
+      <MemoryRouter>
+        <Profile />
+      </MemoryRouter>
+    );
     await waitFor(() => {
-      expect(screen.getByText(/Error: Network Error/i)).toBeInTheDocument();
+      expect(screen.getByText(/Error fetching profile: Network Error/i)).toBeInTheDocument();
     });
   });
 
   test('displays "No profile found" message if profile is not found', async () => {
     (userApi.getUserProfile as jest.Mock).mockResolvedValue({ data: null });
-    render(<Profile />);
+    render(
+      <MemoryRouter>
+        <Profile />
+      </MemoryRouter>
+    );
     await waitFor(() => {
       expect(screen.getByText(/No profile found. Please create one./i)).toBeInTheDocument();
     });

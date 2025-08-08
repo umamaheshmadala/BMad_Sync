@@ -5,16 +5,19 @@ import EditBusinessStorefront from './edit-business-storefront';
 import * as supabaseClientModule from '../lib/supabaseClient';
 
 // Mock the supabase client
+// Create stable storage bucket mock so repeated calls to from('bucket') return the same object
+const storageBucketMock = {
+  upload: jest.fn(() => Promise.resolve({ data: { path: 'test-banner-url' }, error: null })),
+  getPublicUrl: jest.fn(() => ({ data: { publicUrl: 'http://localhost/test-banner-url' } })),
+};
+
 jest.mock('../lib/supabaseClient', () => ({
   supabase: {
     auth: {
       getUser: jest.fn(() => Promise.resolve({ data: { user: { id: 'test-business-id', email: 'test@business.com' } } })),
     },
     storage: {
-      from: jest.fn(() => ({
-        upload: jest.fn(() => Promise.resolve({ data: { path: 'test-banner-url' }, error: null })),
-        getPublicUrl: jest.fn(() => ({ data: { publicUrl: 'http://localhost/test-banner-url' }})),
-      })),
+      from: jest.fn(() => storageBucketMock),
     },
   },
 }));
@@ -80,6 +83,12 @@ describe('EditBusinessStorefront', () => {
       </Router>
     );
 
+    // Wait for initial data to load
+    await screen.findByText('Manage Storefront');
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Description:/i)).toBeInTheDocument();
+    });
+
     // Clear initial values to trigger validation
     fireEvent.change(screen.getByLabelText(/Description:/i), { target: { value: '' } });
     fireEvent.blur(screen.getByLabelText(/Description:/i));
@@ -129,17 +138,20 @@ describe('EditBusinessStorefront', () => {
           upsert: true,
         }
       );
-      expect(global.fetch).toHaveBeenCalledWith(
-        '/api/business/storefront',
+      // We expect two calls: initial GET with business_id, then POST to save data
+      expect((global.fetch as jest.Mock).mock.calls[0][0]).toContain('/api/business/storefront?business_id=');
+      expect((global.fetch as jest.Mock).mock.calls[1][0]).toBe('/api/business/storefront');
+      const secondCallInit = (global.fetch as jest.Mock).mock.calls[1][1] as RequestInit;
+      expect(secondCallInit).toEqual(expect.objectContaining({ method: 'POST' }));
+      const parsedBody = JSON.parse((secondCallInit as any).body);
+      expect(parsedBody).toEqual(
         expect.objectContaining({
-          method: 'POST',
-          body: JSON.stringify(expect.objectContaining({
-            description: 'New Description',
-            contact_details: 'new@contact.com',
-            theme: 'seasonal-spring',
-            is_open: true,
-            promotional_banner_url: 'test-banner-url',
-          })),
+          business_id: 'test-business-id',
+          description: 'New Description',
+          contact_details: 'new@contact.com',
+          theme: 'seasonal-spring',
+          is_open: true,
+          promotional_banner_url: 'test-banner-url',
         })
       );
     });
@@ -148,13 +160,22 @@ describe('EditBusinessStorefront', () => {
   });
 
   it('handles submission error', async () => {
-    // Mock fetch to return an error for the POST request
-    global.fetch.mockImplementationOnce(() =>
-      Promise.resolve({
+    // Ensure first call (GET) returns existing data, then second call (POST) fails
+    (global.fetch as jest.Mock)
+      .mockImplementationOnce((url: string) => Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({
+          description: 'Existing Description',
+          contact_details: 'Existing Contact',
+          theme: 'seasonal-summer',
+          is_open: false,
+          promotional_banner_url: 'existing-banner.jpg',
+        }),
+      }) as Promise<Response>)
+      .mockImplementationOnce(() => Promise.resolve({
         ok: false,
         json: () => Promise.resolve({ error: 'Failed to save' }),
-      }) as Promise<Response>
-    );
+      }) as Promise<Response>);
 
     render(
       <Router>

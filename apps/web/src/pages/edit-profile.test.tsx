@@ -65,6 +65,8 @@ describe('EditProfile', () => {
 
   test('displays validation error for empty full name on submit', async () => {
     render(<EditProfile />);
+    await waitFor(() => expect(supabase.auth.getSession).toHaveBeenCalled());
+    // Directly trigger submit to surface validation
     fireEvent.click(screen.getByRole('button', { name: /Save Profile/i }));
     await waitFor(() => {
       expect(screen.getByText(/Full Name is required./i)).toBeInTheDocument();
@@ -75,6 +77,7 @@ describe('EditProfile', () => {
   test('calls createUserProfile on successful submission for new profile', async () => {
     (userApi.createUserProfile as jest.Mock).mockResolvedValue({});
     render(<EditProfile />);
+    await waitFor(() => expect(supabase.auth.getSession).toHaveBeenCalled());
     const fullNameInput = screen.getByPlaceholderText(/Full Name/i);
     fireEvent.change(fullNameInput, { target: { value: 'Jane Doe' } });
 
@@ -95,6 +98,7 @@ describe('EditProfile', () => {
     (userApi.updateUserProfile as jest.Mock).mockResolvedValue({});
 
     render(<EditProfile />);
+    await waitFor(() => expect(supabase.auth.getSession).toHaveBeenCalled());
 
     await waitFor(() => {
       expect(screen.getByPlaceholderText(/Full Name/i)).toHaveValue('Existing User');
@@ -121,6 +125,7 @@ describe('EditProfile', () => {
     (userApi.createUserProfile as jest.Mock).mockResolvedValue({});
 
     render(<EditProfile />);
+    await waitFor(() => expect(supabase.auth.getSession).toHaveBeenCalled());
 
     const fullNameInput = screen.getByPlaceholderText(/Full Name/i);
     fireEvent.change(fullNameInput, { target: { value: 'Test User' } });
