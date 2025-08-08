@@ -25,3 +25,15 @@ function = "user/dashboard.ts"
 [[edge_functions]]
 path = "/api/user/preferences"
 function = "user/update-preferences.ts"
+
+[[edge_functions]]
+path = "/api/user/favorites/business"
+function = "user/favorites-business.ts"
+
+[[edge_functions]]
+path = "/api/user/favorites/coupon"
+function = "user/favorites-coupon.ts"
+
+[[edge_functions]]
+path = "/api/user/favorites"
+function = "user/favorites-get.ts"

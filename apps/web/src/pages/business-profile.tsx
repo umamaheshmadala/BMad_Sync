@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { BusinessProfile } from '../../../packages/shared-types/src';
+import { BusinessProfile } from '@sync/shared-types';
 import { useNavigate } from 'react-router-dom';
 
 const BusinessProfilePage: React.FC = () => {
@@ -65,33 +65,33 @@ const BusinessProfilePage: React.FC = () => {
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
         <h2 className="text-2xl font-bold mb-6 text-center">Business Profile</h2>
         <div className="mb-4 text-center">
-          {businessProfile.logo_url && (
+          {(businessProfile as any).logo_url && (
             <img
-              src={`${supabase.storage.from('business-logos').getPublicUrl(businessProfile.logo_url).data.publicUrl}`}
+              src={`${supabase.storage.from('business-logos').getPublicUrl((businessProfile as any).logo_url).data.publicUrl}`}
               alt="Business Logo"
               className="w-32 h-32 rounded-full mx-auto mb-4 object-cover"
             />
           )}
           <p className="text-xl font-semibold">{businessProfile.business_name}</p>
-          <p className="text-gray-600">{businessProfile.email}</p>
+          <p className="text-gray-600">{(businessProfile as any).email}</p>
         </div>
         <div className="mb-2">
-          <p><span className="font-semibold">Address:</span> {businessProfile.address}</p>
+          <p><span className="font-semibold">Address:</span> {(businessProfile as any).address}</p>
         </div>
         <div className="mb-2">
-          <p><span className="font-semibold">Google Location:</span> <a href={businessProfile.google_location_url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Link</a></p>
+          <p><span className="font-semibold">Google Location:</span> <a href={(businessProfile as any).google_location_url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Link</a></p>
         </div>
         <div className="mb-2">
-          <p><span className="font-semibold">Contact Info:</span> {businessProfile.contact_info}</p>
+          <p><span className="font-semibold">Contact Info:</span> {(businessProfile as any).contact_info}</p>
         </div>
         <div className="mb-2">
-          <p><span className="font-semibold">Open Times:</span> {businessProfile.open_times}</p>
+          <p><span className="font-semibold">Open Times:</span> {(businessProfile as any).open_times}</p>
         </div>
         <div className="mb-2">
-          <p><span className="font-semibold">Close Times:</span> {businessProfile.close_times}</p>
+          <p><span className="font-semibold">Close Times:</span> {(businessProfile as any).close_times}</p>
         </div>
         <div className="mb-4">
-          <p><span className="font-semibold">Holidays:</span> {businessProfile.holidays}</p>
+          <p><span className="font-semibold">Holidays:</span> {(businessProfile as any).holidays}</p>
         </div>
         <button
           onClick={() => navigate('/edit-business-profile')}

@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
-import { StorefrontProfile } from '../../../packages/shared-types/src';
+import { StorefrontProfile } from '@sync/shared-types';
 
 export const createStorefront = async (storefrontData: Partial<StorefrontProfile>, bannerFile?: File) => {
   const user = await supabase.auth.getUser();

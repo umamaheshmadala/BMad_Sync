@@ -1,4 +1,4 @@
-import React from 'react';
+// React import not needed with react-jsx runtime
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 

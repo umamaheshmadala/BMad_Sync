@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
-import { StorefrontProduct } from '../../../packages/shared-types/src';
+import { StorefrontProduct } from '@sync/shared-types';
 
 interface ProductInput {
   id: string;
@@ -104,14 +104,17 @@ const BusinessStorefrontProducts: React.FC = () => {
 
   const addTrendingProduct = (trendingProduct: StorefrontProduct) => {
     if (products.length < 10) {
-      setProducts([...products, {
-        id: trendingProduct.product_id,
-        name: trendingProduct.product_name,
-        description: trendingProduct.product_description,
-        imageFile: null,
-        imageUrl: trendingProduct.product_image_url,
-        isTrending: true,
-      }]);
+      setProducts([
+        ...products,
+        {
+          id: trendingProduct.product_id,
+          name: trendingProduct.product_name,
+          description: trendingProduct.product_description || '',
+          imageFile: null,
+          imageUrl: trendingProduct.product_image_url || '',
+          isTrending: true,
+        },
+      ]);
     } else {
       alert('You cannot add more than 10 products.');
     }

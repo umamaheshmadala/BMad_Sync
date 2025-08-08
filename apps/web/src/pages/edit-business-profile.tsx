@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient'; // Assuming you have this client setup
-import { BusinessProfile } from '../../../packages/shared-types/src'; // Assuming shared types
+// import { BusinessProfile } from '@sync/shared-types'; // Assuming shared types
 
 const EditBusinessProfile: React.FC = () => {
   const navigate = useNavigate();
@@ -51,7 +51,7 @@ const EditBusinessProfile: React.FC = () => {
         logo_url = data.path;
       }
 
-      const { data, error: dbError } = await supabase
+      const { error: dbError } = await supabase
         .from('businesses')
         .upsert({
           business_id: business_id,
@@ -64,7 +64,7 @@ const EditBusinessProfile: React.FC = () => {
           close_times: closeTimes,
           holidays: holidays,
           logo_url: logo_url,
-        } as BusinessProfile); // Cast to BusinessProfile if needed for type safety
+        } as any);
 
       if (dbError) throw dbError;
 
@@ -187,7 +187,7 @@ const EditBusinessProfile: React.FC = () => {
           <button
             type="submit"
             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
-            disabled={loading || !businessName || !address || (googleLocationUrl && !/^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)$/.test(googleLocationUrl))}
+            disabled={Boolean(loading || !businessName || !address || (googleLocationUrl && !/^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)$/.test(googleLocationUrl)))}
           >
             {loading ? 'Saving...' : 'Save Profile'}
           </button>

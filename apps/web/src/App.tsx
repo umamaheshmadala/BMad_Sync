@@ -1,10 +1,9 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import SignUp from './pages/signup';
 import Login from './pages/login';
 import PrivateRoute from './components/PrivateRoute';
+import PublicRoute from './components/PublicRoute';
 import { useAuth } from './context/AuthContext';
-import { supabase } from './lib/supabaseClient';
 import './App.css';
 import BusinessSignUp from './pages/business-signup';
 import BusinessLogin from './pages/business-login';
@@ -13,9 +12,10 @@ import OnboardingCityInterests from './pages/onboarding-city-interests';
 import EditUserCityInterests from './pages/edit-user-city-interests';
 import Dashboard from './pages/dashboard';
 import OnboardingRoute from './components/OnboardingRoute';
+import CouponWalletPage from './pages/coupon-wallet';
 
 function App() {
-  const { user, loading, logout, onboardingComplete } = useAuth();
+  const { user, loading, logout } = useAuth();
 
   const handleLogout = async () => {
     await logout();
@@ -58,8 +58,8 @@ function App() {
       </nav>
       <main className="flex-grow p-4 md:p-8 bg-background text-foreground min-h-screen">
         <Routes>
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<PublicRoute><SignUp /></PublicRoute>} />
+          <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
           <Route path="/business-signup" element={<BusinessSignUp />} />
           <Route path="/business-login" element={<BusinessLogin />} />
           <Route
@@ -83,6 +83,14 @@ function App() {
             element={
               <PrivateRoute>
                 <Dashboard />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/coupon-wallet"
+            element={
+              <PrivateRoute>
+                <CouponWalletPage />
               </PrivateRoute>
             }
           />

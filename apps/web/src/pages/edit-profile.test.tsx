@@ -110,11 +110,14 @@ describe('EditProfile', () => {
     fireEvent.click(screen.getByRole('button', { name: /Save Profile/i }));
 
     await waitFor(() => {
-      expect(userApi.updateUserProfile).toHaveBeenCalledWith({
-        userId: mockUserId,
-        fullName: 'Updated User',
-        preferredName: '',
-      });
+      expect(userApi.updateUserProfile).toHaveBeenCalledWith(
+        mockUserId,
+        {
+          userId: mockUserId,
+          fullName: 'Updated User',
+          preferredName: '',
+        }
+      );
     });
     expect(screen.getByText(/Profile updated successfully!/i)).toBeInTheDocument();
   });

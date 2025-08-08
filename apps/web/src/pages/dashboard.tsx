@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { FaSearch, FaMapMarkerAlt, FaUserCircle } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { getDashboardData } from '../api/dashboard';
+import { getFavorites, favoriteCoupon, unfavoriteCoupon } from '../api/favorites';
 
 interface Offer {
   id: number;
@@ -20,6 +21,8 @@ const Dashboard: React.FC = () => {
   const [hotOffers, setHotOffers] = useState<Offer[]>([]);
   const [trendingOffers, setTrendingOffers] = useState<Offer[]>([]);
   const [promotionalAds, setPromotionalAds] = useState<Ad[]>([]);
+  const [favoriteBusinessIds, setFavoriteBusinessIds] = useState<string[]>([]);
+  const [favoriteCouponIds, setFavoriteCouponIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedCity, setSelectedCity] = useState<string>('london'); // Default city
@@ -36,8 +39,20 @@ const Dashboard: React.FC = () => {
         setTrendingOffers(data.trendingOffers);
         setPromotionalAds(data.promotionalAds);
       } catch (err) {
+        // Even if dashboard data fails, show a friendly message
         setError('Failed to fetch dashboard data.');
         console.error(err);
+      }
+
+      // Fetch favorites separately; non-fatal if backend not running locally
+      try {
+        if (user?.id) {
+          const fav = await getFavorites(user.id);
+          setFavoriteBusinessIds(fav.businesses);
+          setFavoriteCouponIds(fav.coupons);
+        }
+      } catch (favErr) {
+        console.warn('Fetching favorites failed; continuing without favorites.', favErr);
       } finally {
         setLoading(false);
       }
@@ -48,6 +63,22 @@ const Dashboard: React.FC = () => {
 
   const handleCityChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedCity(event.target.value);
+  };
+
+  const toggleCouponFavorite = async (couponId: string) => {
+    if (!user?.id) return;
+    const isFav = favoriteCouponIds.includes(couponId);
+    try {
+      if (isFav) {
+        await unfavoriteCoupon(user.id, couponId);
+        setFavoriteCouponIds((prev) => prev.filter((id) => id !== couponId));
+      } else {
+        await favoriteCoupon(user.id, couponId);
+        setFavoriteCouponIds((prev) => [...prev, couponId]);
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   if (loading) {
@@ -116,6 +147,14 @@ const Dashboard: React.FC = () => {
                   <li key={offer.id} className="mb-2">
                     <h4 className="font-semibold">{offer.title}</h4>
                     <p className="text-muted-foreground text-sm">{offer.description}</p>
+                    {user?.id && (
+                      <button
+                        className={`mt-1 text-xs px-2 py-1 rounded ${favoriteCouponIds.includes(String(offer.id)) ? 'bg-red-500 text-white' : 'bg-blue-500 text-white'}`}
+                        onClick={() => toggleCouponFavorite(String(offer.id))}
+                      >
+                        {favoriteCouponIds.includes(String(offer.id)) ? 'Unfavorite' : 'Favorite'}
+                      </button>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -131,6 +170,14 @@ const Dashboard: React.FC = () => {
                   <li key={offer.id} className="mb-2">
                     <h4 className="font-semibold">{offer.title}</h4>
                     <p className="text-muted-foreground text-sm">{offer.description}</p>
+                    {user?.id && (
+                      <button
+                        className={`mt-1 text-xs px-2 py-1 rounded ${favoriteCouponIds.includes(String(offer.id)) ? 'bg-red-500 text-white' : 'bg-blue-500 text-white'}`}
+                        onClick={() => toggleCouponFavorite(String(offer.id))}
+                      >
+                        {favoriteCouponIds.includes(String(offer.id)) ? 'Unfavorite' : 'Favorite'}
+                      </button>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -151,6 +198,18 @@ const Dashboard: React.FC = () => {
               </div>
             ) : (
               <p className="text-muted-foreground">No promotional ads available at the moment.</p>
+            )}
+          </div>
+          <div className="bg-card text-card-foreground p-4 rounded-lg shadow-sm border border-border">
+            <h3 className="text-xl font-medium mb-2">Your Favorite Businesses</h3>
+            {favoriteBusinessIds.length > 0 ? (
+              <ul>
+                {favoriteBusinessIds.map((bizId) => (
+                  <li key={bizId} className="mb-2 text-sm text-muted-foreground">{bizId}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-muted-foreground">No favorites yet.</p>
             )}
           </div>
         </div>

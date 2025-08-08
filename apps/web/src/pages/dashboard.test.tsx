@@ -1,11 +1,13 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import Dashboard from '../pages/dashboard';
+import * as favoritesApi from '../api/favorites';
 import { AuthContext } from '../context/AuthContext';
 import { getDashboardData } from '../api/dashboard';
 
 // Mock the API call
 jest.mock('../api/dashboard');
+jest.mock('../api/favorites');
 const mockGetDashboardData = getDashboardData as jest.Mock;
 
 // Mock AuthContext
@@ -44,6 +46,7 @@ describe('Dashboard', () => {
       trendingOffers: [{ id: 2, title: 'Trending Offer 1', description: 'Description 2' }],
       promotionalAds: [{ id: 3, title: 'Ad 1', imageUrl: 'test-ad.jpg' }],
     });
+    (favoritesApi.getFavorites as jest.Mock).mockResolvedValue({ businesses: [], coupons: [] });
 
     render(
       <AuthContext.Provider value={mockAuthContextValue}>

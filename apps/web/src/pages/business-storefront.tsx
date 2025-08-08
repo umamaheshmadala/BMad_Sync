@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { StorefrontProfile, StorefrontProduct } from '../../../packages/shared-types/src';
+import { StorefrontProfile, StorefrontProduct } from '@sync/shared-types';
+import { useAuth } from '../context/AuthContext';
+import { favoriteBusiness, unfavoriteBusiness, getFavorites } from '../api/favorites';
 import { useNavigate } from 'react-router-dom';
 
 const BusinessStorefrontPage: React.FC = () => {
@@ -8,7 +10,9 @@ const BusinessStorefrontPage: React.FC = () => {
   const [products, setProducts] = useState<StorefrontProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isFavorite, setIsFavorite] = useState<boolean>(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchStorefrontAndProducts = async () => {
@@ -39,6 +43,16 @@ const BusinessStorefrontPage: React.FC = () => {
             setStorefront(null); // No storefront found, prompt to create
         } else {
             throw new Error(storefrontData.error || 'Failed to fetch storefront');
+        }
+
+        // Load favorite status for this business storefront (if viewing as a user)
+        if (user.data.user && user.data.user.id) {
+          try {
+            const favorites = await getFavorites(user.data.user.id);
+            setIsFavorite(favorites.businesses.includes(business_id));
+          } catch (_) {
+            // ignore
+          }
         }
       } catch (err: any) {
         setError(err.message);
@@ -78,6 +92,29 @@ const BusinessStorefrontPage: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
         <h2 className="text-2xl font-bold mb-6 text-center">Your Storefront</h2>
+        {user?.id && storefront && (
+          <div className="mb-4 flex justify-center">
+            <button
+              onClick={async () => {
+                if (!user?.id) return;
+                try {
+                  if (isFavorite) {
+                    await unfavoriteBusiness(user.id, storefront.business_id);
+                    setIsFavorite(false);
+                  } else {
+                    await favoriteBusiness(user.id, storefront.business_id);
+                    setIsFavorite(true);
+                  }
+                } catch (e) {
+                  console.error(e);
+                }
+              }}
+              className={`px-3 py-1 rounded text-sm ${isFavorite ? 'bg-red-500 text-white' : 'bg-blue-500 text-white'}`}
+            >
+              {isFavorite ? 'Unfavorite' : 'Favorite'}
+            </button>
+          </div>
+        )}
         <div className="mb-4 text-center">
           {storefront.promotional_banner_url && (
             <img

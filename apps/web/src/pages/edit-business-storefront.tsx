@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
-import { StorefrontProfile } from '../../../packages/shared-types/src'; // Assuming shared types
+import { StorefrontProfile } from '@sync/shared-types'; // Assuming shared types
 
 const EditBusinessStorefront: React.FC = () => {
   const navigate = useNavigate();

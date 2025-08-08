@@ -1,13 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import {
-  User,
-  SupabaseClient,
-} from "@supabase/supabase-js";
+import { User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabaseClient";
-import {
-  UserProfile,
-  BusinessProfile,
-} from "../../../packages/shared-types/src";
+import { UserProfile, BusinessProfile } from "@sync/shared-types";
 
 interface AuthContextType {
   user: User | null;
@@ -51,7 +45,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         console.log("handleSession: User set to", session.id);
         try {
           console.log("handleSession: Fetching user profile for", session.id);
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 7000);
           await getUserProfile(session.id);
+          clearTimeout(timeout);
           console.log("handleSession: User profile fetched.");
 
           // If user profile is still null, bootstrap a minimal row
@@ -132,8 +129,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const withTimeout = async <T,>(promise: Promise<T>, ms: number, label: string): Promise<T | null> => {
     let timeoutId: any;
     try {
-      const result = await Promise.race<Promise<T | null>>([
-        promise as unknown as Promise<T>,
+      const result = await Promise.race<unknown>([
+        promise,
         new Promise<null>((resolve) => {
           timeoutId = setTimeout(() => {
             console.warn(`${label}: timed out after ${ms}ms`);
@@ -251,16 +248,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const getUserProfile = async (userId: string) => {
     console.log("getUserProfile: Fetching profile for", userId);
     try {
-      const { data, error } = await Promise.race([
-        supabase
-          .from("users")
-          .select("*")
-          .eq("user_id", userId)
-          .single(), // Add .single() to expect one row
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Timeout fetching user profile.")), 5000)
-        ),
+      const raceResult: any = await Promise.race([
+        supabase.from("users").select("*").eq("user_id", userId).single(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout fetching user profile.")), 5000)),
       ]);
+      const { data, error } = raceResult || {};
 
       if (error) {
         console.error("getUserProfile: Error details:", error.message, error.details, error.hint);
@@ -307,39 +299,60 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     const updateResult = await withTimeout(
-      supabase
+      (supabase
         .from("users")
         .update(updates)
-        .eq("user_id", (await user).data.user?.id),
+        .eq("user_id", (await user).data.user?.id) as unknown as Promise<any>),
       7000,
       'updateUserProfile'
     );
     const error = (updateResult as any)?.error ?? null;
 
     if (error) {
-      console.error("updateUserProfile: Error updating user profile:", error);
-      throw error;
-    }
-    await getUserProfile((await user).data.user?.id || "");
-    console.log("updateUserProfile: User profile updated, re-fetching onboarding status.");
-    // After updating the profile, re-fetch the onboarding status
-    const statusResult = await withTimeout(
-      supabase
-        .from('users')
-        .select('onboarding_complete')
-        .eq('user_id', (await user).data.user?.id)
-        .single(),
-      5000,
-      'updateUserProfile:fetchOnboarding'
-    );
-    const profileData = (statusResult as any)?.data;
+      console.warn("updateUserProfile: Client update failed, attempting server-side update via Edge Function.");
+      // Fallback to server-side update using service role
+      const userId = (await user).data.user?.id as string;
+      const body: any = { userId };
+      if ((updates as any).full_name) body.fullName = (updates as any).full_name;
+      if ((updates as any).preferred_name) body.preferredName = (updates as any).preferred_name;
+      if ((updates as any).avatar_url) body.avatarUrl = (updates as any).avatar_url;
+      if (typeof (updates as any).city !== 'undefined') body.city = (updates as any).city;
+      if (typeof (updates as any).interests !== 'undefined') body.interests = (updates as any).interests;
+      if (typeof (updates as any).onboarding_complete !== 'undefined') body.onboarding_complete = (updates as any).onboarding_complete;
 
-    if (profileData && (profileData.onboarding_complete === true)) {
-      setOnboardingComplete(true);
-      console.log("updateUserProfile: Onboarding complete after update.");
-    } else {
-      setOnboardingComplete(false);
-      console.log("updateUserProfile: Onboarding not complete after update.");
+      const resp = await fetch('/api/user/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!resp.ok) {
+        const j = await resp.json().catch(() => ({}));
+        console.error("updateUserProfile: Edge Function update failed:", j?.error || resp.statusText);
+        throw new Error(j?.error || 'Failed to update user profile');
+      }
+    }
+    // Optimistically update local state to keep UX responsive
+    setUserProfile((prev) => ({ ...(prev ?? {} as any), ...(updates as any) }));
+    if (typeof (updates as any).onboarding_complete !== 'undefined') {
+      setOnboardingComplete(Boolean((updates as any).onboarding_complete));
+    }
+
+    // Best-effort refresh from server, but don't block navigation if it times out
+    try {
+      await getUserProfile((await user).data.user?.id || "");
+      console.log("updateUserProfile: User profile updated, re-fetching onboarding status.");
+      const statusResult = await withTimeout(
+        supabase.from('users').select('onboarding_complete').eq('user_id', (await user).data.user?.id).single() as unknown as Promise<any>,
+        5000,
+        'updateUserProfile:fetchOnboarding'
+      );
+      const profileData = (statusResult as any)?.data;
+      if (profileData && (profileData.onboarding_complete === true)) {
+        setOnboardingComplete(true);
+        console.log("updateUserProfile: Onboarding complete after update.");
+      }
+    } catch (e) {
+      console.warn('updateUserProfile: Skipping server confirmation due to timeout/error. Using optimistic state.');
     }
   };
 
@@ -356,8 +369,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         logout,
         // Provide signOut alias to maintain backward compatibility with tests/components
         signOut: logout,
-        getUserProfile,
-        getBusinessProfile,
+        getUserProfile: () => getUserProfile(user?.id || ''),
+        getBusinessProfile: () => getBusinessProfile(user?.id || ''),
         updateUserProfile,
       }}
     >

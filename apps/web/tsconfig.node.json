@@ -28,5 +28,5 @@
     "esModuleInterop": true,
     "types": ["vite/client"]
   },
-  "include": ["vite.config.ts", "jest.config.ts", "eslint.config.js", "src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.js"]
+  "include": ["vite.config.ts", "jest.config.ts", "eslint.config.js"]
 }

@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
-import { BusinessProfile } from '../../../packages/shared-types/src';
+import { BusinessProfile } from '@sync/shared-types';
 
 export const signUpBusiness = async (email: string, password: string) => {
   const { data, error } = await supabase.auth.signUp({
@@ -45,14 +45,14 @@ export const loginBusiness = async (email: string, password: string) => {
   return { user: data.user, session: data.session };
 };
 
-export const createBusinessProfile = async (profileData: Partial<BusinessProfile>, logoFile?: File) => {
+export const createBusinessProfile = async (profileData: Partial<BusinessProfile & { logo_url?: string }>, logoFile?: File) => {
   const user = await supabase.auth.getUser();
   if (!user.data.user) {
     throw new Error('User not logged in');
   }
   const business_id = user.data.user.id;
 
-  let logo_url = profileData.logo_url || '';
+  let logo_url = (profileData as any).logo_url || '';
   if (logoFile) {
     const fileExt = logoFile.name.split('.').pop();
     const fileName = `${business_id}.${fileExt}`;

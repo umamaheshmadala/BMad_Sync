@@ -100,7 +100,7 @@ const EditProfile = () => {
 
     try {
       if (profileExists) {
-        await updateUserProfile(profileData);
+        await updateUserProfile(ensuredUserId, profileData);
         setSuccessMessage("Profile updated successfully!");
       } else {
         await createUserProfile(profileData);

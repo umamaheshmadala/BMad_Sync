@@ -1,17 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { getUserProfile } from '../api/user';
 // Avoid Link in tests unless wrapped; keep route-agnostic for unit tests
 // import { Link } from 'react-router-dom';
 
-interface UserProfile {
+interface UserProfileView {
   full_name: string;
-  preferred_name: string;
-  avatar_url: string;
+  preferred_name?: string;
+  avatar_url?: string;
+  city?: string;
+  interests?: string[];
 }
 
 const Profile = () => {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profile, setProfile] = useState<UserProfileView | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
