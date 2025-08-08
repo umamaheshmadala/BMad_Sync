@@ -6,7 +6,7 @@ const BusinessPrivateRoute = ({ children }: { children: JSX.Element }) => {
   const { user, loading, isBusiness } = useAuth();
 
   if (loading) {
-    return <div>Loading...</div>; // Or a loading spinner
+    return <div className="min-h-screen flex items-center justify-center bg-gray-900 dark:bg-gray-950 text-white dark:text-gray-100"><p>Loading...</p></div>; // Or a loading spinner
   }
 
   if (!user || !isBusiness) {

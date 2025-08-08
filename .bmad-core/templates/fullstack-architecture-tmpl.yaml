@@ -175,7 +175,7 @@ sections:
           - ["CI/CD", "{{cicd}}", "{{version}}", "{{purpose}}", "{{why_chosen}}"]
           - ["Monitoring", "{{monitoring}}", "{{version}}", "{{purpose}}", "{{why_chosen}}"]
           - ["Logging", "{{logging}}", "{{version}}", "{{purpose}}", "{{why_chosen}}"]
-          - ["CSS Framework", "{{css_framework}}", "{{version}}", "{{purpose}}", "{{why_chosen}}"]
+          - ["CSS Framework", "Tailwind CSS with shadcn/ui Theming", "latest", "Utility-first CSS framework for rapid UI development with extensible theming", "Enables consistent styling and easy theme customization across the application."]
 
   - id: data-models
     title: Data Models
@@ -502,7 +502,7 @@ sections:
       │   │   │   ├── hooks/          # Custom React hooks
       │   │   │   ├── services/       # API client services
       │   │   │   ├── stores/         # State management
-      │   │   │   ├── styles/         # Global styles/themes
+      │   │   │   ├── styles/         # Global styles/themes, including CSS variables for shadcn/ui
       │   │   │   └── utils/          # Frontend utilities
       │   │   ├── public/             # Static assets
       │   │   ├── tests/              # Frontend tests
@@ -540,6 +540,7 @@ sections:
       │   └── fullstack-architecture.md
       ├── .env.example                # Environment template
       ├── package.json                # Root package.json
+      ├── tailwind.config.ts          # Tailwind CSS configuration, including theme extensions
       ├── {{monorepo_config}}         # Monorepo configuration
       └── README.md
 

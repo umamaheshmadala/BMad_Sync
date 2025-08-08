@@ -8,7 +8,7 @@ jest.mock("https://esm.sh/@supabase/supabase-js@2", () => ({
     from: jest.fn(() => ({
       update: jest.fn(() => ({
         eq: jest.fn(() => ({
-          select: jest.fn(() => ({ data: [{ id: "mock-user-id" }], error: null })),
+          select: jest.fn(() => ({ data: [{ id: "mock-user-id", city: "Updated City", interests: ["Updated Interest"] , onboarding_complete: true }], error: null })),
         })),
       })),
     })),
@@ -67,6 +67,9 @@ describe("update.ts Edge Function", () => {
       userId: "test-user-uuid",
       fullName: "Updated User",
       preferredName: "Updater",
+      city: "New York",
+      interests: ["Technology", "Sports", "Music", "Movies", "Books"],
+      onboarding_complete: true,
     };
     const req = new Request("http://localhost/api/user/update", {
       method: "POST",

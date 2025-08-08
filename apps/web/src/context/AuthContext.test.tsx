@@ -23,6 +23,16 @@ jest.mock('../lib/supabaseClient', () => ({
       signInWithPassword: jest.fn(() => Promise.resolve({ data: { user: {} as User, session: {} as Session } })),
       signOut: jest.fn(() => Promise.resolve({ error: null })),
     },
+    from: jest.fn(() => ({
+      select: jest.fn(() => ({
+        eq: jest.fn(() => ({
+          single: jest.fn(() => Promise.resolve({ data: { full_name: 'Test User', username: 'testuser', onboarding_complete: false, city: null, interests: [] }, error: null }))
+        }))
+      })),
+      update: jest.fn(() => ({
+        eq: jest.fn(() => Promise.resolve({ data: null, error: null }))
+      }))
+    })),
   },
 }));
 
@@ -32,15 +42,19 @@ import { AuthProvider, AuthContext } from './AuthContext';
 
 // A simple test component to consume AuthContext
 const TestComponent = () => {
-  const { user, session, loading, login, logout } = React.useContext(AuthContext);
+  const { user, loading, onboardingComplete, signIn, signUp, signOut, userProfile, updateUserProfile } = React.useContext(AuthContext);
 
   return (
     <div>
       <span data-testid="user">{user ? user.email : 'null'}</span>
-      <span data-testid="session">{session ? 'session' : 'null'}</span>
       <span data-testid="loading">{loading ? 'loading' : 'not loading'}</span>
-      <button onClick={() => login('test@example.com', 'password')} data-testid="login-button">Login</button>
-      <button onClick={logout} data-testid="logout-button">Logout</button>
+      <span data-testid="onboarding-complete">{onboardingComplete ? 'true' : 'false'}</span>
+      <span data-testid="user-profile-city">{userProfile?.city || 'null'}</span>
+      <span data-testid="user-profile-interests">{(userProfile?.interests || []).join(',') || 'null'}</span>
+      <button onClick={() => signIn('test@example.com', 'password')} data-testid="signin-button">Sign In</button>
+      <button onClick={() => signUp('new@example.com', 'password')} data-testid="signup-button">Sign Up</button>
+      <button onClick={signOut} data-testid="signout-button">Sign Out</button>
+      <button onClick={() => updateUserProfile({ city: 'New York', interests: ['Sports', 'Music', 'Movies', 'Books', 'Travel'], onboarding_complete: true })} data-testid="update-profile-button">Update Profile</button>
     </div>
   );
 };
@@ -61,7 +75,9 @@ describe('AuthContext', () => {
 
     expect(screen.getByTestId('loading')).toHaveTextContent('loading');
     expect(screen.getByTestId('user')).toHaveTextContent('null');
-    expect(screen.getByTestId('session')).toHaveTextContent('null');
+    expect(screen.getByTestId('onboarding-complete')).toHaveTextContent('false');
+    expect(screen.getByTestId('user-profile-city')).toHaveTextContent('null');
+    expect(screen.getByTestId('user-profile-interests')).toHaveTextContent('null');
     
     // Wait for the initial session check to complete
     await waitFor(() => {
@@ -76,7 +92,7 @@ describe('AuthContext', () => {
     }
   });
 
-  it('calls signOut when logout function is invoked and clears state', async () => {
+  it('calls signOut when signOut function is invoked and clears state', async () => {
     const mockSession = { user: { id: '1', email: 'test@example.com' } } as Session;
 
     render(
@@ -93,14 +109,16 @@ describe('AuthContext', () => {
     });
 
     expect(screen.getByTestId('user')).toHaveTextContent('test@example.com');
-    expect(screen.getByTestId('session')).toHaveTextContent('session');
+    expect(screen.getByTestId('onboarding-complete')).toHaveTextContent('false'); // Initial state for onboarding
+    expect(screen.getByTestId('user-profile-city')).toHaveTextContent('null');
+    expect(screen.getByTestId('user-profile-interests')).toHaveTextContent('null');
 
-    // Trigger the logout function
-    const logoutButton = screen.getByTestId('logout-button');
-    fireEvent.click(logoutButton);
+    // Trigger the signOut function
+    const signOutButton = screen.getByTestId('signout-button');
+    fireEvent.click(signOutButton);
 
-    // Assert that the mocked logout was called
-    expect(apiLogout).toHaveBeenCalledTimes(1);
+    // Assert that the mocked signOut was called
+    expect(supabase.auth.signOut).toHaveBeenCalledTimes(1);
 
     // Manually trigger the SIGNED_OUT event callback
     await waitFor(() => {
@@ -109,12 +127,14 @@ describe('AuthContext', () => {
 
     // Assert that the state is now cleared
     expect(screen.getByTestId('user')).toHaveTextContent('null');
-    expect(screen.getByTestId('session')).toHaveTextContent('null');
+    expect(screen.getByTestId('onboarding-complete')).toHaveTextContent('false');
+    expect(screen.getByTestId('user-profile-city')).toHaveTextContent('null');
+    expect(screen.getByTestId('user-profile-interests')).toHaveTextContent('null');
   });
 
-  it('handles logout errors gracefully', async () => {
-    // Mock the logout function to return a Promise that rejects with an error
-    (apiLogout as jest.Mock).mockRejectedValueOnce(new Error('Logout failed'));
+  it('handles signOut errors gracefully', async () => {
+    // Mock the signOut function to return a Promise that rejects with an error
+    (supabase.auth.signOut as jest.Mock).mockRejectedValueOnce(new Error('Sign Out failed'));
 
     const mockSession = { user: { id: '1', email: 'test@example.com' } } as Session;
 
@@ -131,18 +151,77 @@ describe('AuthContext', () => {
       mockOnAuthStateChangeCallback.mock.calls[0][1]('SIGNED_IN', mockSession, mockSession.user);
     });
     
-    // Trigger the logout function
-    const logoutButton = screen.getByTestId('logout-button');
-    fireEvent.click(logoutButton);
+    // Trigger the signOut function
+    const signOutButton = screen.getByTestId('signout-button');
+    fireEvent.click(signOutButton);
 
-    // Assert that the mocked logout was called
-    expect(apiLogout).toHaveBeenCalledTimes(1);
+    // Assert that the mocked signOut was called
+    expect(supabase.auth.signOut).toHaveBeenCalledTimes(1);
 
     // Assert that the error was caught and the state remains unchanged
-    // We expect the user to still be logged in because logout failed
+    // We expect the user to still be logged in because signOut failed
     await waitFor(() => {
       expect(screen.getByTestId('user')).toHaveTextContent('test@example.com');
-      expect(screen.getByTestId('session')).toHaveTextContent('session');
+      expect(screen.getByTestId('onboarding-complete')).toHaveTextContent('false');
+    });
+  });
+
+  it('updates user profile with city, interests, and onboarding_complete status', async () => {
+    const mockUser = { id: '1', email: 'test@example.com' } as User;
+    const mockSession = { user: mockUser } as Session;
+
+    // Mock getSession to return a session with user data
+    (supabase.auth.getSession as jest.Mock).mockResolvedValueOnce({ data: { session: mockSession } });
+    // Mock getUserProfile to initially return a profile with onboarding_complete: false
+    (supabase.from as jest.Mock).mockReturnValueOnce({
+      select: jest.fn(() => ({
+        eq: jest.fn(() => ({
+          single: jest.fn(() => Promise.resolve({ data: { full_name: 'Test User', username: 'testuser', onboarding_complete: false, city: null, interests: [] }, error: null }))
+        }))
+      })),
+    });
+    // Mock updateUserProfile to simulate successful update
+    const mockUpdate = jest.fn(() => Promise.resolve({ data: null, error: null }));
+    (supabase.from as jest.Mock).mockReturnValueOnce({
+      update: mockUpdate,
+      eq: jest.fn(() => ({ data: null, error: null })), // This is a simplified mock, adjust if needed
+    });
+    // Mock getUserProfile again after update to reflect changes
+    (supabase.from as jest.Mock).mockReturnValueOnce({
+      select: jest.fn(() => ({
+        eq: jest.fn(() => ({
+          single: jest.fn(() => Promise.resolve({ data: { full_name: 'Test User', username: 'testuser', onboarding_complete: true, city: 'New York', interests: ['Sports', 'Music', 'Movies', 'Books', 'Travel'] }, error: null }))
+        }))
+      })),
+    });
+
+    render(
+      <AuthProvider>
+        <TestComponent />
+      </AuthProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('loading')).toHaveTextContent('not loading');
+    });
+
+    expect(screen.getByTestId('user')).toHaveTextContent('test@example.com');
+    expect(screen.getByTestId('onboarding-complete')).toHaveTextContent('false');
+    expect(screen.getByTestId('user-profile-city')).toHaveTextContent('null');
+    expect(screen.getByTestId('user-profile-interests')).toHaveTextContent('null');
+
+    // Trigger update profile
+    fireEvent.click(screen.getByTestId('update-profile-button'));
+
+    await waitFor(() => {
+      expect(mockUpdate).toHaveBeenCalledWith({
+        city: 'New York',
+        interests: ['Sports', 'Music', 'Movies', 'Books', 'Travel'],
+        onboarding_complete: true,
+      });
+      expect(screen.getByTestId('onboarding-complete')).toHaveTextContent('true');
+      expect(screen.getByTestId('user-profile-city')).toHaveTextContent('New York');
+      expect(screen.getByTestId('user-profile-interests')).toHaveTextContent('Sports,Music,Movies,Books,Travel');
     });
   });
 });

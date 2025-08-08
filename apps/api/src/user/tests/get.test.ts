@@ -65,6 +65,9 @@ describe("get.ts Edge Function", () => {
       avatar_url: "http://example.com/avatar.png",
       email: "test@example.com",
       created_at: "2023-01-01T00:00:00Z",
+      city: "New York",
+      interests: ["Technology", "Sports", "Music"],
+      onboarding_complete: true,
     };
     (createClient as jest.Mock).mockReturnValueOnce({
       from: jest.fn(() => ({

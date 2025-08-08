@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { getUserProfile } from '../api/user';
+import { Link } from 'react-router-dom';
 
 interface UserProfile {
   full_name: string;
@@ -48,10 +49,10 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-900 dark:bg-gray-950 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 bg-gray-800 dark:bg-gray-900 p-8 rounded-lg shadow-xl">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-white dark:text-gray-100">
             User Profile
           </h2>
           {profile.avatar_url && (
@@ -61,13 +62,26 @@ const Profile = () => {
               className="mx-auto h-24 w-24 rounded-full object-cover mt-4"
             />
           )}
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-center text-gray-300 dark:text-gray-400">
             Full Name: {profile.full_name}
           </p>
-          <p className="mt-1 text-center text-sm text-gray-600">
+          <p className="mt-1 text-center text-gray-300 dark:text-gray-400">
             Preferred Name: {profile.preferred_name || 'N/A'}
           </p>
-          {/* Add more profile details as needed */}
+          <p className="mt-1 text-center text-gray-300 dark:text-gray-400">
+            City: {profile.city || 'N/A'}
+          </p>
+          <p className="mt-1 text-center text-gray-300 dark:text-gray-400">
+            Interests: {profile.interests && profile.interests.length > 0 ? profile.interests.join(', ') : 'N/A'}
+          </p>
+          <div className="mt-6 text-center">
+            <Link
+              to="/edit-profile/city-interests"
+              className="text-indigo-400 hover:text-indigo-300 font-medium"
+            >
+              Edit City & Interests
+            </Link>
+          </div>
         </div>
       </div>
     </div>

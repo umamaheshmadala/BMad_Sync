@@ -27,7 +27,7 @@ export default async (req: Request, context: Context) => {
 
     const { data, error } = await supabase
       .from("users")
-      .select("full_name, preferred_name, avatar_url, email, created_at")
+      .select("full_name, preferred_name, avatar_url, email, created_at, city, interests, onboarding_complete")
       .eq("user_id", userId)
       .single();
 

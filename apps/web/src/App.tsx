@@ -9,9 +9,13 @@ import './App.css';
 import BusinessSignUp from './pages/business-signup';
 import BusinessLogin from './pages/business-login';
 import BusinessPrivateRoute from './components/BusinessPrivateRoute';
+import OnboardingCityInterests from './pages/onboarding-city-interests';
+import EditUserCityInterests from './pages/edit-user-city-interests';
+import Dashboard from './pages/dashboard';
+import OnboardingRoute from './components/OnboardingRoute';
 
 function App() {
-  const { user, loading, logout } = useAuth();
+  const { user, loading, logout, onboardingComplete } = useAuth();
 
   const handleLogout = async () => {
     await logout();
@@ -23,56 +27,74 @@ function App() {
 
   return (
     <Router>
-      <nav>
-        <ul>
+      <nav className="bg-gray-800 dark:bg-gray-900 text-white p-4 shadow-md">
+        <ul className="flex justify-center space-x-4">
           <li>
-            <Link to="/">Home</Link>
+            <Link to="/" className="hover:text-gray-300 transition-colors duration-200">Home</Link>
           </li>
           {!user && (
             <>
               <li>
-                <Link to="/signup">Sign Up</Link>
+                <Link to="/signup" className="hover:text-gray-300 transition-colors duration-200">Sign Up</Link>
               </li>
               <li>
-                <Link to="/login">Login</Link>
+                <Link to="/login" className="hover:text-gray-300 transition-colors duration-200">Login</Link>
               </li>
             </>
           )}
           {user && (
             <>
               <li>
-                <span>Hello, {user.email}</span>
+                <span className="text-gray-300">Hello, {user.email}</span>
               </li>
               <li>
-                <button onClick={handleLogout}>Logout</button>
+                <button onClick={handleLogout} className="py-1 px-3 bg-indigo-600 hover:bg-indigo-700 rounded-md transition-colors duration-200">Logout</button>
               </li>
             </>
           )}
         </ul>
       </nav>
-      <Routes>
-        <Route path="/signup" element={<SignUp />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/business-signup" element={<BusinessSignUp />} />
-        <Route path="/business-login" element={<BusinessLogin />} />
-        <Route
-          path="/dashboard"
-          element={
-            <PrivateRoute>
-              <h1>Dashboard (Protected)</h1>
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/business-dashboard"
-          element={
-            <BusinessPrivateRoute>
-              <h1>Business Dashboard (Protected)</h1>
-            </BusinessPrivateRoute>
-          }
-        />
-        <Route path="/" element={<h1>Welcome!</h1>} />
-      </Routes>
+      <main className="flex-grow p-4 md:p-8">
+        <Routes>
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/business-signup" element={<BusinessSignUp />} />
+          <Route path="/business-login" element={<BusinessLogin />} />
+          <Route
+            path="/onboarding-city-interests"
+            element={
+              <OnboardingRoute>
+                <OnboardingCityInterests />
+              </OnboardingRoute>
+            }
+          />
+          <Route
+            path="/edit-profile/city-interests"
+            element={
+              <PrivateRoute>
+                <EditUserCityInterests />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={
+              <PrivateRoute>
+                <Dashboard />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/business-dashboard"
+            element={
+              <BusinessPrivateRoute>
+                <h1>Business Dashboard (Protected)</h1>
+              </BusinessPrivateRoute>
+            }
+          />
+          <Route path="/" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+        </Routes>
+      </main>
     </Router>
   );
 }

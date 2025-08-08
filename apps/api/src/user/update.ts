@@ -10,7 +10,7 @@ export default async (req: Request, context: Context) => {
   }
 
   try {
-    const { userId, fullName, preferredName, avatarUrl } = await req.json();
+    const { userId, fullName, preferredName, avatarUrl, city, interests, onboarding_complete } = await req.json();
 
     if (!userId) {
       return new Response(JSON.stringify({ error: "User ID is required for update" }), {
@@ -24,10 +24,13 @@ export default async (req: Request, context: Context) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") as string
     );
 
-    const updateData: { full_name?: string; preferred_name?: string; avatar_url?: string } = {};
+    const updateData: { full_name?: string; preferred_name?: string; avatar_url?: string; city?: string; interests?: string[]; onboarding_complete?: boolean } = {};
     if (fullName !== undefined) updateData.full_name = fullName;
     if (preferredName !== undefined) updateData.preferred_name = preferredName;
     if (avatarUrl !== undefined) updateData.avatar_url = avatarUrl;
+    if (city !== undefined) updateData.city = city;
+    if (interests !== undefined) updateData.interests = interests;
+    if (onboarding_complete !== undefined) updateData.onboarding_complete = onboarding_complete;
 
     const { data, error } = await supabase
       .from("users")

@@ -44,9 +44,23 @@ export const createUserProfile = async (profileData: UserProfileData) => {
   return response.json();
 };
 
-export const updateUserProfile = async (profileData: UserProfileData) => {
-  const response = await fetch('/api/user/update', {
-    method: 'POST',
+interface PrivacySettings {
+  adFrequency: 'low' | 'medium' | 'high';
+  excludeCategories: string[];
+}
+
+interface UserProfileUpdateData {
+  fullName?: string;
+  preferredName?: string;
+  avatarUrl?: string;
+  city?: string;
+  interests?: string[];
+  privacy_settings?: PrivacySettings;
+}
+
+export const updateUserProfile = async (userId: string, profileData: UserProfileUpdateData) => {
+  const response = await fetch(`/api/user/preferences?userId=${userId}`, {
+    method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
     },

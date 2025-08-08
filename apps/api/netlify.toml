@@ -17,3 +17,11 @@ function = "user/update.ts"
 [[edge_functions]]
 path = "/api/user/get"
 function = "user/get.ts"
+
+[[edge_functions]]
+path = "/api/user/dashboard"
+function = "user/dashboard.ts"
+
+[[edge_functions]]
+path = "/api/user/preferences"
+function = "user/update-preferences.ts"
