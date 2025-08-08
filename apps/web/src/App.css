@@ -39,3 +39,19 @@
 .read-the-docs {
   color: #888;
 }
+
+/* App-wide overrides for navbar using theme tokens */
+nav {
+  background-color: oklch(var(--background));
+  color: oklch(var(--foreground));
+}
+nav a {
+  color: oklch(var(--secondary-foreground));
+}
+nav a:hover {
+  color: oklch(var(--primary));
+}
+button {
+  background-color: oklch(var(--primary));
+  color: oklch(var(--primary-foreground));
+}
