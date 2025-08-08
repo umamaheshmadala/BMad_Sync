@@ -20,12 +20,12 @@ const SignUp = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-900 dark:bg-gray-950 p-4 sm:p-6 lg:p-8">
-      <div className="bg-gray-800 dark:bg-gray-900 p-8 rounded-lg shadow-xl w-full max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-6xl">
-        <h2 className="text-3xl font-extrabold mb-8 text-center text-white dark:text-gray-100">Sign Up for SynC</h2>
+    <div className="min-h-screen flex items-center justify-center bg-background text-foreground p-4 sm:p-6 lg:p-8">
+      <div className="bg-card text-card-foreground p-8 rounded-lg shadow-lg border border-border w-full max-w-md">
+        <h2 className="text-3xl font-extrabold mb-8 text-center">Sign Up for SynC</h2>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-300 dark:text-gray-400 mb-1">Email address</label>
+            <label htmlFor="email" className="block text-sm font-medium text-muted-foreground mb-1">Email address</label>
             <input
               type="email"
               id="email"
@@ -33,12 +33,12 @@ const SignUp = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="appearance-none block w-full px-4 py-2 border border-gray-700 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-700 text-white dark:bg-gray-800 dark:text-gray-100"
+              className="block w-full px-4 py-2 border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring sm:text-sm bg-muted text-foreground"
               placeholder="Enter your email"
             />
           </div>
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-300 dark:text-gray-400 mb-1">Password</label>
+            <label htmlFor="password" className="block text-sm font-medium text-muted-foreground mb-1">Password</label>
             <input
               type="password"
               id="password"
@@ -46,7 +46,7 @@ const SignUp = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="appearance-none block w-full px-4 py-2 border border-gray-700 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-700 text-white dark:bg-gray-800 dark:text-gray-100"
+              className="block w-full px-4 py-2 border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring sm:text-sm bg-muted text-foreground"
               placeholder="Create a password"
             />
           </div>

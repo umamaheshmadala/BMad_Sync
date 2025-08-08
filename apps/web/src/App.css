@@ -11,7 +11,7 @@
   transition: filter 300ms;
 }
 .logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+  filter: drop-shadow(0 0 2em rgba(28, 63, 58, 0.66));
 }
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
@@ -42,16 +42,16 @@
 
 /* App-wide overrides for navbar using theme tokens */
 nav {
-  background-color: oklch(var(--background));
-  color: oklch(var(--foreground));
+  background-color: var(--background);
+  color: var(--foreground);
 }
 nav a {
-  color: oklch(var(--secondary-foreground));
+  color: var(--secondary-foreground);
 }
 nav a:hover {
-  color: oklch(var(--primary));
+  color: var(--primary);
 }
 button {
-  background-color: oklch(var(--primary));
-  color: oklch(var(--primary-foreground));
+  background-color: var(--primary);
+  color: var(--primary-foreground);
 }

@@ -27,34 +27,34 @@ function App() {
 
   return (
     <Router>
-      <nav className="bg-gray-800 dark:bg-gray-900 text-white p-4 shadow-md">
-        <ul className="flex justify-center space-x-4">
+      <nav className="bg-card text-card-foreground border-b border-border p-4 shadow-sm">
+        <ul className="flex justify-center space-x-6">
           <li>
-            <Link to="/" className="hover:text-gray-300 transition-colors duration-200">Home</Link>
+            <Link to="/" className="hover:text-primary transition-colors duration-200">Home</Link>
           </li>
           {!user && (
             <>
               <li>
-                <Link to="/signup" className="hover:text-gray-300 transition-colors duration-200">Sign Up</Link>
+                <Link to="/signup" className="hover:text-primary transition-colors duration-200">Sign Up</Link>
               </li>
               <li>
-                <Link to="/login" className="hover:text-gray-300 transition-colors duration-200">Login</Link>
+                <Link to="/login" className="hover:text-primary transition-colors duration-200">Login</Link>
               </li>
             </>
           )}
           {user && (
             <>
               <li>
-                <span className="text-gray-300">Hello, {user.email}</span>
+                <span className="text-muted-foreground">Hello, {user.email}</span>
               </li>
               <li>
-                <button onClick={handleLogout} className="py-1 px-3 bg-indigo-600 hover:bg-indigo-700 rounded-md transition-colors duration-200">Logout</button>
+                <button onClick={handleLogout} className="py-1 px-3 bg-primary text-primary-foreground hover:bg-primary/90 rounded-md transition-colors duration-200">Logout</button>
               </li>
             </>
           )}
         </ul>
       </nav>
-      <main className="flex-grow p-4 md:p-8">
+      <main className="flex-grow p-4 md:p-8 bg-background text-foreground min-h-screen">
         <Routes>
           <Route path="/signup" element={<SignUp />} />
           <Route path="/login" element={<Login />} />
