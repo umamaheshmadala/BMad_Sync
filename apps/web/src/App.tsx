@@ -13,6 +13,7 @@ import EditUserCityInterests from './pages/edit-user-city-interests';
 import Dashboard from './pages/dashboard';
 import OnboardingRoute from './components/OnboardingRoute';
 import CouponWalletPage from './pages/coupon-wallet';
+import ProgressPage from './pages/progress';
 
 function App() {
   const { user, loading, logout } = useAuth();
@@ -83,6 +84,14 @@ function App() {
             element={
               <PrivateRoute>
                 <Dashboard />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/progress"
+            element={
+              <PrivateRoute>
+                <ProgressPage />
               </PrivateRoute>
             }
           />

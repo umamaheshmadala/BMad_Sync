@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { FaSearch, FaMapMarkerAlt, FaUserCircle } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getDashboardData } from '../api/dashboard';
 import { getFavorites, favoriteCoupon, unfavoriteCoupon } from '../api/favorites';
@@ -25,6 +26,7 @@ const Dashboard: React.FC = () => {
   const [favoriteCouponIds, setFavoriteCouponIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [favoriteError, setFavoriteError] = useState<string | null>(null);
   const [selectedCity, setSelectedCity] = useState<string>('london'); // Default city
 
   useEffect(() => {
@@ -69,6 +71,7 @@ const Dashboard: React.FC = () => {
     if (!user?.id) return;
     const isFav = favoriteCouponIds.includes(couponId);
     try {
+      setFavoriteError(null);
       if (isFav) {
         await unfavoriteCoupon(user.id, couponId);
         setFavoriteCouponIds((prev) => prev.filter((id) => id !== couponId));
@@ -78,6 +81,7 @@ const Dashboard: React.FC = () => {
       }
     } catch (e) {
       console.error(e);
+      setFavoriteError('Failed to update favorite. Please try again.');
     }
   };
 
@@ -137,7 +141,15 @@ const Dashboard: React.FC = () => {
 
       {/* Main Content */}
       <main className="p-6">
-        <h2 className="text-3xl font-semibold mb-6">Welcome to your Dashboard!</h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-3xl font-semibold">Welcome to your Dashboard!</h2>
+            <Link to="/progress" className="text-sm text-blue-600 hover:underline">View Story Progress</Link>
+          </div>
+        {favoriteError && (
+          <div className="mb-4 text-sm text-red-600" role="alert">
+            {favoriteError}
+          </div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div className="bg-card text-card-foreground p-4 rounded-lg shadow-sm border border-border">
             <h3 className="text-xl font-medium mb-2">Hot Coupon Offers</h3>

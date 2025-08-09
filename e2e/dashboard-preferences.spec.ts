@@ -31,8 +31,8 @@ test.describe('Dashboard and Preferences', () => {
     await page.getByLabel('City Selection').selectOption('new-york');
 
     // Verify content updates for New York
-    await expect(page.getByText(/Hot Pizza in New York/i)).toBeVisible();
-    await expect(page.getByText(/Trending New Restaurant in New York/i)).toBeVisible();
+    await expect(page.getByText(/50% off Pizza in new-york/i)).toBeVisible();
+    await expect(page.getByText(/New Burger Joint in new-york/i)).toBeVisible();
   });
 
   test('should allow updating ad preferences', async ({ page }) => {

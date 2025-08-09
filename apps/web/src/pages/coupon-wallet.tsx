@@ -7,6 +7,7 @@ const CouponWalletPage: React.FC = () => {
   const [favoriteCoupons, setFavoriteCoupons] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadFavorites = async () => {
@@ -29,11 +30,12 @@ const CouponWalletPage: React.FC = () => {
   const handleUnfavorite = async (couponId: string) => {
     if (!user?.id) return;
     try {
+      setActionError(null);
       await unfavoriteCoupon(user.id, couponId);
       setFavoriteCoupons((prev) => prev.filter((id) => id !== couponId));
     } catch (e) {
       console.error(e);
-      alert('Failed to unfavorite coupon');
+      setActionError('Failed to unfavorite coupon. Please try again.');
     }
   };
 
@@ -43,6 +45,11 @@ const CouponWalletPage: React.FC = () => {
   return (
     <div className="container mx-auto p-6 bg-card text-card-foreground rounded-lg shadow-sm border border-border mt-8">
       <h2 className="text-2xl font-bold mb-4">Coupon Wallet</h2>
+      {actionError && (
+        <div className="mb-4 text-sm text-red-600" role="alert">
+          {actionError}
+        </div>
+      )}
       {favoriteCoupons.length === 0 ? (
         <p className="text-muted-foreground">No favorited coupons yet.</p>
       ) : (

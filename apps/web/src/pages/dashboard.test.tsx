@@ -62,6 +62,41 @@ describe('Dashboard', () => {
     });
   });
 
+  test('toggles coupon favorite and handles API errors gracefully', async () => {
+    mockGetDashboardData.mockResolvedValue({
+      user: { id: 'test-user-id', city: 'London', interests: ['Food'] },
+      hotOffers: [{ id: 1, title: 'Hot Offer 1', description: 'Description 1' }],
+      trendingOffers: [],
+      promotionalAds: [],
+    });
+    (favoritesApi.getFavorites as jest.Mock).mockResolvedValue({ businesses: [], coupons: [] });
+    (favoritesApi.favoriteCoupon as jest.Mock).mockResolvedValue({});
+    (favoritesApi.unfavoriteCoupon as jest.Mock).mockRejectedValue(new Error('fail'));
+
+    render(
+      <AuthContext.Provider value={mockAuthContextValue}>
+        <Dashboard />
+      </AuthContext.Provider>
+    );
+
+    // Wait for dashboard to render
+    await waitFor(() => {
+      expect(screen.getByText('Hot Offer 1')).toBeInTheDocument();
+    });
+
+    // Favorite -> success path
+    const favBtn = screen.getAllByRole('button', { name: /Favorite/i })[0];
+    await userEvent.click(favBtn);
+
+    // Now try unfavorite -> mocked to fail, expect error alert text
+    const unfavBtn = screen.getAllByRole('button', { name: /Unfavorite/i })[0];
+    await userEvent.click(unfavBtn);
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent('Failed to update favorite');
+    });
+  });
+
   test('displays error message on API failure', async () => {
     mockGetDashboardData.mockRejectedValue(new Error('Network error'));
 

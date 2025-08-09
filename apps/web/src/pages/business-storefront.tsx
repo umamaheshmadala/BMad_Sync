@@ -11,6 +11,7 @@ const BusinessStorefrontPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isFavorite, setIsFavorite] = useState<boolean>(false);
+  const [favoriteError, setFavoriteError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -98,6 +99,7 @@ const BusinessStorefrontPage: React.FC = () => {
               onClick={async () => {
                 if (!user?.id) return;
                 try {
+                  setFavoriteError(null);
                   if (isFavorite) {
                     await unfavoriteBusiness(user.id, storefront.business_id);
                     setIsFavorite(false);
@@ -107,12 +109,18 @@ const BusinessStorefrontPage: React.FC = () => {
                   }
                 } catch (e) {
                   console.error(e);
+                  setFavoriteError('Failed to update favorite. Please try again.');
                 }
               }}
               className={`px-3 py-1 rounded text-sm ${isFavorite ? 'bg-red-500 text-white' : 'bg-blue-500 text-white'}`}
             >
               {isFavorite ? 'Unfavorite' : 'Favorite'}
             </button>
+          </div>
+        )}
+        {favoriteError && (
+          <div className="mb-2 text-center text-sm text-red-600" role="alert">
+            {favoriteError}
           </div>
         )}
         <div className="mb-4 text-center">
