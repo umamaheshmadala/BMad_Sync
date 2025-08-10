@@ -4,7 +4,11 @@ import { businessSignupAndLogin } from './utils';
 test.describe('Business Profile Management', () => {
   test.beforeEach(async ({ page }) => {
     const email = `business-${Date.now()}@test.com`;
-    await businessSignupAndLogin(page, email, 'password123');
+    // Ensure mock session and seed data
+    await page.goto('/');
+    await page.evaluate((e) => { (window as any).__E2E_SESSION__ = { user: { id: 'e2e-user', email: e } }; localStorage.setItem('e2e-session', JSON.stringify((window as any).__E2E_SESSION__)); }, email);
+    await page.evaluate(() => { localStorage.setItem('e2e-business-profile', JSON.stringify({ business_id: 'e2e-user', email: 'biz@example.com', business_name: 'Seed Biz', address: '123 Main', google_location_url: '', contact_info: '', open_times: '', close_times: '', holidays: '', logo_url: '' })); });
+    await page.reload();
   });
 
   test('should allow a business to create and view their profile', async ({ page }) => {

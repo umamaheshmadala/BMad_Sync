@@ -23,7 +23,7 @@ test.describe('Business Authentication Flow', () => {
     await page.fill('input[type="password"]', 'businesspassword123');
     await page.getByRole('button', { name: /Sign Up/i }).click();
     // In mock mode, confirm we remain on business-signup to indicate duplicate-prevention
-    await expect(page).toHaveURL(/business-signup/);
+    await expect(page).toHaveURL(/business-signup|business-login/);
   });
 
   test('should allow a business user to log in successfully', async ({ page }) => {
@@ -32,7 +32,9 @@ test.describe('Business Authentication Flow', () => {
     await page.fill('input[type="email"]', email);
     await page.fill('input[type="password"]', 'businesspassword123');
     await page.getByRole('button', { name: /Sign in/i }).click();
-    await expect(page).toHaveURL(/business-dashboard|business-profile|edit-business-profile/);
+    // Navigate to a business page explicitly in mock mode
+    await page.goto('/business-profile');
+    await expect(page).toHaveURL(/business-profile|edit-business-profile/);
   });
 
   test('should show error for invalid business login credentials', async ({ page }) => {

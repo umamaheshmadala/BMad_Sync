@@ -34,8 +34,9 @@ test.describe('User Profile Flow', () => {
     // Our profile page heading is "Business Profile" for business; for user profiles, check alternative text
     const userHeading = page.getByRole('heading', { name: /User Profile/i });
     const bizHeading = page.getByRole('heading', { name: /Business Profile/i });
-    const eitherVisible = await userHeading.isVisible({ timeout: 2000 }).catch(() => false)
-      || await bizHeading.isVisible({ timeout: 2000 }).catch(() => false);
+    const userVisible = await userHeading.isVisible({ timeout: 1000 }).catch(() => false);
+    const bizVisible = await bizHeading.isVisible({ timeout: 1000 }).catch(() => false);
+    const eitherVisible = userVisible || bizVisible;
     expect(eitherVisible).toBeTruthy();
     // Loosen assertions in mock mode to check presence of profile container text
     await expect(page.locator('text=Address:').first()).toBeVisible();

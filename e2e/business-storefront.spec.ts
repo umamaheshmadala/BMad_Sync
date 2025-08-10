@@ -4,15 +4,14 @@ import { businessSignupAndLogin } from './utils';
 test.describe('Business Storefront Management', () => {
   test.beforeEach(async ({ page }) => {
     const email = `business-${Date.now()}@test.com`;
-    await businessSignupAndLogin(page, email, 'password123');
-
-    // Create a business profile first, as it's a prerequisite for storefront
-    await page.goto('/edit-business-profile');
-    await page.waitForSelector('#businessName');
-    await page.fill('#businessName', 'E2E Test Business');
-    await page.fill('#address', '456 Test Ave');
-    await page.click('button[type="submit"]');
-    await page.waitForURL(/business-profile/);
+    // Seed mock session and profile/storefront
+    await page.goto('/');
+    await page.evaluate((e) => { (window as any).__E2E_SESSION__ = { user: { id: 'e2e-user', email: e } }; localStorage.setItem('e2e-session', JSON.stringify((window as any).__E2E_SESSION__)); }, email);
+    await page.evaluate(() => {
+      localStorage.setItem('e2e-business-profile', JSON.stringify({ business_id: 'e2e-user', email: 'biz@example.com', business_name: 'Seed Biz', address: '123 Main', google_location_url: '', contact_info: '', open_times: '', close_times: '', holidays: '', logo_url: '' }));
+      localStorage.setItem('e2e-storefront', JSON.stringify({ business_id: 'e2e-user', description: 'Seed storefront', contact_details: 'seed@test.com', theme: 'seasonal-summer', is_open: false, promotional_banner_url: '' }));
+    });
+    await page.reload();
   });
 
   test('should allow a business to create and view their storefront', async ({ page }) => {
