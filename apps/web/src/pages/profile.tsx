@@ -46,8 +46,9 @@ const Profile = () => {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
           const userId = session.user.id;
-          const { data: profileData } = await getUserProfile(userId);
-          setProfile(profileData);
+        const result: any = await getUserProfile(userId);
+        const profileData = (result && typeof result === 'object' && 'data' in result) ? (result as any).data : result;
+        setProfile(profileData as any);
         } else {
           setError("User not logged in.");
         }

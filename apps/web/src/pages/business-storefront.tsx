@@ -69,11 +69,25 @@ const BusinessStorefrontPage: React.FC = () => {
   }, []);
 
   if (loading && !isE2eMock) {
-    return <div className="min-h-screen flex items-center justify-center bg-gray-100">Loading storefront...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md text-center">
+          <h2 className="text-2xl font-bold mb-6">Your Storefront</h2>
+          <p>Loading storefront...</p>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="min-h-screen flex items-center justify-center bg-gray-100 text-red-500">Error: {error}</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md text-center">
+          <h2 className="text-2xl font-bold mb-6">Your Storefront</h2>
+          <div className="text-red-500">Error: {error}</div>
+        </div>
+      </div>
+    );
   }
 
   if (!storefront) {
