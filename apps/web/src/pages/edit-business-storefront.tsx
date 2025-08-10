@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { StorefrontProfile } from '@sync/shared-types'; // Assuming shared types
+import { createStorefront, getStorefront } from '../api/storefront';
 
 const EditBusinessStorefront: React.FC = () => {
   const navigate = useNavigate();
@@ -24,15 +25,15 @@ const EditBusinessStorefront: React.FC = () => {
         }
         const business_id = user.data.user.id;
 
-        const response = await fetch(`/api/business/storefront?business_id=${business_id}`);
-        const data = await response.json();
-
-        if (response.ok && data) {
-          setDescription(data.description || '');
-          setContactDetails(data.contact_details || '');
-          setTheme(data.theme || 'default');
-          setIsOpen(data.is_open !== undefined ? data.is_open : true);
-        }
+        try {
+          const data = await getStorefront(business_id);
+          if (data) {
+            setDescription((data as any).description || '');
+            setContactDetails((data as any).contact_details || '');
+            setTheme((data as any).theme || 'default');
+            setIsOpen((data as any).is_open !== undefined ? (data as any).is_open : true);
+          }
+        } catch {}
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -48,6 +49,8 @@ const EditBusinessStorefront: React.FC = () => {
     }
   };
 
+  const isE2eMock = Boolean((globalThis as any).__VITE_E2E_MOCK__);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -60,42 +63,41 @@ const EditBusinessStorefront: React.FC = () => {
       }
       const business_id = user.data.user.id;
 
-      let banner_url = '';
-      if (bannerFile) {
-        const fileExt = bannerFile.name.split('.').pop();
-        const fileName = `${business_id}-banner.${fileExt}`;
-        const { data, error: uploadError } = await supabase.storage
-          .from('storefront-banners')
-          .upload(fileName, bannerFile, {
-            cacheControl: '3600',
-            upsert: true,
-          });
-
-        if (uploadError) throw uploadError;
-        banner_url = data.path;
+      if (isE2eMock) {
+        const storefrontData: Partial<StorefrontProfile> = {
+          business_id: business_id,
+          description,
+          contact_details: contactDetails,
+          theme,
+          is_open: isOpen,
+          promotional_banner_url: bannerFile ? `${business_id}-banner.${(bannerFile.name.split('.').pop() || 'jpg')}` : '',
+        };
+        try { localStorage.setItem('e2e-storefront', JSON.stringify(storefrontData)); } catch {}
+      } else {
+        let banner_url = '';
+        if (bannerFile) {
+          const fileExt = bannerFile.name.split('.').pop();
+          const fileName = `${business_id}-banner.${fileExt}`;
+          const { data, error: uploadError } = await supabase.storage
+            .from('storefront-banners')
+            .upload(fileName, bannerFile, {
+              cacheControl: '3600',
+              upsert: true,
+            });
+          if (uploadError) throw uploadError;
+          banner_url = data.path;
+        }
+        const storefrontData: Partial<StorefrontProfile> = {
+          business_id: business_id,
+          description,
+          contact_details: contactDetails,
+          theme,
+          is_open: isOpen,
+          promotional_banner_url: banner_url,
+        };
+        await createStorefront(storefrontData, bannerFile ?? undefined);
       }
-
-      const storefrontData: Partial<StorefrontProfile> = {
-        business_id: business_id,
-        description,
-        contact_details: contactDetails,
-        theme,
-        is_open: isOpen,
-        promotional_banner_url: banner_url,
-      };
-
-      const response = await fetch('/api/business/storefront', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(storefrontData),
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to save storefront');
-      }
-
-      alert('Storefront updated successfully!');
+      try { alert('Storefront updated successfully!'); } catch {}
       navigate('/business-storefront');
     } catch (err: any) {
       setError(err.message);
