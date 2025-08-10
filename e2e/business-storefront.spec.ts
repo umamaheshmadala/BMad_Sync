@@ -31,8 +31,21 @@ test.describe('Business Storefront Management', () => {
 
     await page.waitForURL(/business-storefront/);
 
-    // Verify storefront heading present
-    await expect(page.getByRole('heading', { name: /Your Storefront/i })).toBeVisible({ timeout: 15000 });
+    // Verify storefront heading present or creation prompt if none
+    const heading = page.getByRole('heading', { name: /Your Storefront/i });
+    if (!(await heading.isVisible({ timeout: 5000 }).catch(() => false))) {
+      await expect(page.getByText(/No storefront found/i)).toBeVisible({ timeout: 15000 });
+      await page.getByRole('button', { name: /Create Storefront/i }).click();
+      await page.waitForURL('/edit-business-storefront');
+      await page.waitForSelector('#description');
+      await page.fill('#description', 'My awesome test storefront.');
+      await page.fill('#contactDetails', 'e2e@teststore.com');
+      await page.click('button[type="submit"]');
+      await page.waitForURL(/business-storefront/);
+      await expect(heading).toBeVisible({ timeout: 15000 });
+    } else {
+      await expect(heading).toBeVisible({ timeout: 15000 });
+    }
   });
 
   test('should allow a business to edit their storefront', async ({ page }) => {

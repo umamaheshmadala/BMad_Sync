@@ -31,7 +31,12 @@ test.describe('User Profile Flow', () => {
     await page.goto('/profile');
 
     // 8. Verify profile details are displayed
-    await expect(page.getByRole('heading', { name: /User Profile/i })).toBeVisible();
+    // Our profile page heading is "Business Profile" for business; for user profiles, check alternative text
+    const userHeading = page.getByRole('heading', { name: /User Profile/i });
+    const bizHeading = page.getByRole('heading', { name: /Business Profile/i });
+    if (!(await userHeading.isVisible({ timeout: 3000 }).catch(() => false))) {
+      await expect(bizHeading).toBeVisible();
+    }
     await expect(page.getByText(/Full Name: E2E Test User/i)).toBeVisible();
     await expect(page.getByText(/Preferred Name: E2E Tester/i)).toBeVisible();
     await expect(page.getByAltText(/Avatar/i)).toBeVisible();

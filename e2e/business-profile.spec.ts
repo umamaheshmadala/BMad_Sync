@@ -38,9 +38,15 @@ test.describe('Business Profile Management', () => {
     await page.click('button[type="submit"]');
     await page.waitForURL(/business-profile/);
 
-    // Navigate to edit profile page (button is labeled "Create Profile" when none exists)
-    await expect(page.locator('button:has-text("Create Profile")')).toBeVisible({ timeout: 15000 });
-    await page.click('button:has-text("Create Profile")');
+    // Navigate to edit profile page (handle both first-time and existing cases)
+    const createBtn = page.locator('button:has-text("Create Profile")');
+    const editBtn = page.locator('button:has-text("Edit Profile")');
+    if (await createBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await createBtn.click();
+    } else {
+      await expect(editBtn).toBeVisible({ timeout: 15000 });
+      await editBtn.click();
+    }
     await page.waitForURL('/edit-business-profile');
     await page.waitForSelector('#businessName');
 

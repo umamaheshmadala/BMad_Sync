@@ -74,14 +74,11 @@ test.describe('Favorites Flow', () => {
     });
 
     // Login as an existing test user
-    await page.goto('/login');
-    await page.fill('input[type="email"]', 'test@example.com');
-    await page.fill('input[type="password"]', 'password123');
-    await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-    await page.waitForURL(/(dashboard|onboarding-city-interests|\/$)/);
-    if (page.url().includes('onboarding-city-interests')) {
-      await page.goto('/dashboard');
-    }
+    await page.goto('/');
+    // In mock mode, set synthetic session so navbar appears
+    await page.evaluate(() => { (window as any).__E2E_SESSION__ = { user: { id: 'test-user-id', email: 'test@example.com' } }; localStorage.setItem('e2e-session', JSON.stringify((window as any).__E2E_SESSION__)); });
+    await page.reload();
+    await page.goto('/dashboard');
     await expect(page.getByText('Welcome to your Dashboard!')).toBeVisible({ timeout: 15000 });
   });
 

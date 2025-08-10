@@ -37,9 +37,11 @@ test.describe('Dashboard and Preferences', () => {
 
   test('should allow updating ad preferences', async ({ page }) => {
     // Navigate to preferences page (assuming a direct link or navigation)
-    await page.goto('/preferences'); // Adjust if the navigation is different
+    await page.goto('/dashboard');
     await page.waitForLoadState('domcontentloaded');
-    // Our UI displays an h2 with "Ad Preferences"
+    // Use navbar link to navigate to Preferences to ensure route is active
+    await page.getByRole('link', { name: /Preferences/i }).click();
+    await page.waitForURL(/preferences/);
     await expect(page.getByRole('heading', { name: /Ad Preferences/i })).toBeVisible({ timeout: 20000 });
 
     // Change ad frequency
