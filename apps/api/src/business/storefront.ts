@@ -22,7 +22,7 @@ serve(async (req) => {
         promotional_banner_url,
       } = await req.json();
 
-      const { data, error } = await supabase
+      const result = await supabase
         .from('storefronts')
         .upsert({
           business_id,
@@ -34,6 +34,8 @@ serve(async (req) => {
           created_at: new Date().toISOString(),
         } as StorefrontProfile);
 
+      const data = (result && 'data' in result) ? (result as any).data : undefined;
+      const error = (result && 'error' in result) ? (result as any).error : undefined;
       if (error) throw error;
 
       return new Response(JSON.stringify(data), {
@@ -51,11 +53,14 @@ serve(async (req) => {
         });
       }
 
-      const { data, error } = await supabase
+      const result = await supabase
         .from('storefronts')
         .select('*')
         .eq('business_id', business_id)
         .single();
+
+      const data = (result && 'data' in result) ? (result as any).data : undefined;
+      const error = (result && 'error' in result) ? (result as any).error : undefined;
 
       if (error) throw error;
       if (!data) {

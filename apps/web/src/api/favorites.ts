@@ -1,4 +1,5 @@
 export const favoriteBusiness = async (userId: string, businessId: string) => {
+  if ((globalThis as any).__VITE_E2E_MOCK__) return { success: true };
   const res = await fetch(`/api/user/favorites/business?userId=${encodeURIComponent(userId)}&businessId=${encodeURIComponent(businessId)}`, {
     method: 'POST',
   });
@@ -8,6 +9,7 @@ export const favoriteBusiness = async (userId: string, businessId: string) => {
 };
 
 export const unfavoriteBusiness = async (userId: string, businessId: string) => {
+  if ((globalThis as any).__VITE_E2E_MOCK__) return { success: true };
   const res = await fetch(`/api/user/favorites/business?userId=${encodeURIComponent(userId)}&businessId=${encodeURIComponent(businessId)}`, {
     method: 'DELETE',
   });
@@ -17,6 +19,7 @@ export const unfavoriteBusiness = async (userId: string, businessId: string) => 
 };
 
 export const favoriteCoupon = async (userId: string, couponId: string) => {
+  if ((globalThis as any).__VITE_E2E_MOCK__) return { success: true };
   const res = await fetch(`/api/user/favorites/coupon?userId=${encodeURIComponent(userId)}&couponId=${encodeURIComponent(couponId)}`, {
     method: 'POST',
   });
@@ -26,6 +29,7 @@ export const favoriteCoupon = async (userId: string, couponId: string) => {
 };
 
 export const unfavoriteCoupon = async (userId: string, couponId: string) => {
+  if ((globalThis as any).__VITE_E2E_MOCK__) return { success: true };
   const res = await fetch(`/api/user/favorites/coupon?userId=${encodeURIComponent(userId)}&couponId=${encodeURIComponent(couponId)}`, {
     method: 'DELETE',
   });
@@ -35,6 +39,7 @@ export const unfavoriteCoupon = async (userId: string, couponId: string) => {
 };
 
 export const getFavorites = async (userId: string) => {
+  if ((globalThis as any).__VITE_E2E_MOCK__) return { businesses: [], coupons: [] };
   const res = await fetch(`/api/user/favorites?userId=${encodeURIComponent(userId)}`);
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Failed to fetch favorites');

@@ -5,15 +5,22 @@ import { assertEquals } from "https://deno.land/std@0.177.0/testing/asserts.ts";
 const SUPABASE_URL = "https://mock.supabase.co";
 const SUPABASE_ANON_KEY = "mock-anon-key";
 
-const mockSupabase = {
-  from: jest.fn(() => ({
+const tableMocks: Record<string, any> = {};
+const createTableMock = () => {
+  const chain = {
     upsert: jest.fn(),
-    select: jest.fn(() => ({
-      eq: jest.fn(() => ({
-        single: jest.fn(),
-      })),
-    })),
-  })),
+    select: jest.fn(() => chain),
+    eq: jest.fn(() => chain),
+    single: jest.fn(),
+  };
+  return chain;
+};
+
+const mockSupabase = {
+  from: jest.fn((table: string) => {
+    if (!tableMocks[table]) tableMocks[table] = createTableMock();
+    return tableMocks[table];
+  }),
 };
 
 // Mock the serve function for testing
@@ -28,9 +35,13 @@ jest.mock("@supabase/supabase-js", () => ({
   createClient: jest.fn(() => mockSupabase),
 }));
 
+// Import the API module to register the handler via serve()
+import "../storefront.ts";
+
 describe("Business Storefront API", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    Object.keys(tableMocks).forEach((k) => delete tableMocks[k]);
   });
 
   it("should handle POST request to create/update storefront", async () => {
@@ -80,8 +91,6 @@ describe("Business Storefront API", () => {
 
     mockSupabase
       .from("storefronts")
-      .select("*")
-      .eq("business_id", "biz-123")
       .single.mockResolvedValueOnce({ data: mockStorefrontData, error: null });
 
     const req = new Request(
@@ -122,8 +131,6 @@ describe("Business Storefront API", () => {
   it("should return 404 if storefront not found for GET request", async () => {
     mockSupabase
       .from("storefronts")
-      .select("*")
-      .eq("business_id", "non-existent-id")
       .single.mockResolvedValueOnce({ data: null, error: null });
 
     const req = new Request(
@@ -165,8 +172,6 @@ describe("Business Storefront API", () => {
   it("should return 500 for database errors on GET request", async () => {
     mockSupabase
       .from("storefronts")
-      .select("*")
-      .eq("business_id", "biz-123")
       .single.mockResolvedValueOnce({
         data: null,
         error: { message: "Database error" },

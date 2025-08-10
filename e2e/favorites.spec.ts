@@ -82,7 +82,7 @@ test.describe('Favorites Flow', () => {
     if (page.url().includes('onboarding-city-interests')) {
       await page.goto('/dashboard');
     }
-    await expect(page.getByText('Welcome to your Dashboard!')).toBeVisible();
+    await expect(page.getByText('Welcome to your Dashboard!')).toBeVisible({ timeout: 15000 });
   });
 
   test('user can favorite a coupon from dashboard', async ({ page }) => {

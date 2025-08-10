@@ -1,9 +1,15 @@
 import { assert, assertEquals } from "https://deno.land/std/assert/mod.ts";
 import { stub, restore } from "https://deno.land/std/mock/mod.ts";
+
+let mockSupabase: any;
+
+jest.mock("https://esm.sh/@supabase/supabase-js@2", () => ({
+  createClient: () => mockSupabase,
+}));
+
 import dashboardHandler from "../dashboard.ts"; // The actual Edge Function file
 
 describe("dashboard Edge Function", () => {
-  let mockSupabase: any;
   let mockContext: any;
 
   beforeEach(() => {
@@ -14,7 +20,7 @@ describe("dashboard Edge Function", () => {
       return undefined;
     });
 
-    // Mock Supabase client
+    // Provide Supabase client used by handler via mocked createClient
     mockSupabase = {
       from: () => mockSupabase,
       select: () => mockSupabase,

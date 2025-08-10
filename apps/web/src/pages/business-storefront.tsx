@@ -4,6 +4,7 @@ import { StorefrontProfile, StorefrontProduct } from '@sync/shared-types';
 import { useAuth } from '../context/AuthContext';
 import { favoriteBusiness, unfavoriteBusiness, getFavorites } from '../api/favorites';
 import { useNavigate } from 'react-router-dom';
+import { getStorefront } from '../api/storefront';
 
 const BusinessStorefrontPage: React.FC = () => {
   const [storefront, setStorefront] = useState<StorefrontProfile | null>(null);
@@ -15,39 +16,41 @@ const BusinessStorefrontPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  const isE2eMock = Boolean((globalThis as any).__VITE_E2E_MOCK__);
+
   useEffect(() => {
     const fetchStorefrontAndProducts = async () => {
       setLoading(true);
       try {
-        const user = await supabase.auth.getUser();
-        if (!user.data.user) {
-          throw new Error('User not logged in');
-        }
-        const business_id = user.data.user.id;
-
-        // Fetch storefront profile
-        const storefrontResponse = await fetch(`/api/business/storefront?business_id=${business_id}`);
-        const storefrontData = await storefrontResponse.json();
-
-        if (storefrontResponse.ok && storefrontData) {
-          setStorefront(storefrontData);
-          // Fetch products if storefront exists
-          const productsResponse = await fetch(`/api/storefronts/${storefrontData.storefront_id}/products`);
-          const productsData = await productsResponse.json();
-          if (productsResponse.ok && productsData) {
-            setProducts(productsData);
-          } else if (productsResponse.status !== 404) {
-              throw new Error(productsData.error || 'Failed to fetch products');
+        if (isE2eMock) {
+          try {
+            const raw = localStorage.getItem('e2e-storefront');
+            setStorefront(raw ? JSON.parse(raw) as any : null);
+          } catch {
+            setStorefront(null);
           }
-
-        } else if (storefrontResponse.status === 404) {
-            setStorefront(null); // No storefront found, prompt to create
+          setLoading(false);
+          return;
         } else {
-            throw new Error(storefrontData.error || 'Failed to fetch storefront');
+          const user = await supabase.auth.getUser();
+          if (!user.data.user) {
+            throw new Error('User not logged in');
+          }
+          const business_id = user.data.user.id;
+          try {
+            const storefrontData = await getStorefront(business_id);
+            if (storefrontData) setStorefront(storefrontData as any);
+          } catch (e: any) {
+            if (/Not Found/i.test(e?.message || '')) {
+              setStorefront(null);
+            } else {
+              throw e;
+            }
+          }
         }
 
         // Load favorite status for this business storefront (if viewing as a user)
-        if (user.data.user && user.data.user.id) {
+        if (!isE2eMock && user.data.user && user.data.user.id) {
           try {
             const favorites = await getFavorites(user.data.user.id);
             setIsFavorite(favorites.businesses.includes(business_id));
@@ -58,14 +61,14 @@ const BusinessStorefrontPage: React.FC = () => {
       } catch (err: any) {
         setError(err.message);
       } finally {
-        setLoading(false);
+        if (!isE2eMock) setLoading(false);
       }
     };
 
     fetchStorefrontAndProducts();
   }, []);
 
-  if (loading) {
+  if (loading && !isE2eMock) {
     return <div className="min-h-screen flex items-center justify-center bg-gray-100">Loading storefront...</div>;
   }
 
@@ -178,6 +181,9 @@ const BusinessStorefrontPage: React.FC = () => {
             Manage Products
           </button>
         </div>
+        {isE2eMock && (
+          <div className="mt-4 text-xs text-gray-500 text-center">Mock mode</div>
+        )}
       </div>
     </div>
   );

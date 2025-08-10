@@ -87,6 +87,7 @@ describe('EditBusinessProfile', () => {
   });
 
   it('submits the form successfully with logo upload', async () => {
+    ;(globalThis as any).__VITE_E2E_MOCK__ = false;
     render(
       <Router>
         <EditBusinessProfile />
@@ -139,6 +140,7 @@ describe('EditBusinessProfile', () => {
   });
 
   it('handles submission error', async () => {
+    ;(globalThis as any).__VITE_E2E_MOCK__ = false;
     (supabaseClientModule.supabase.from as jest.Mock).mockReturnValueOnce({
       upsert: jest.fn(() => Promise.resolve({ data: null, error: { message: 'Database error' } })),
     } as any);

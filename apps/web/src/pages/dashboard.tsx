@@ -18,7 +18,7 @@ interface Ad {
 }
 
 const Dashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [hotOffers, setHotOffers] = useState<Offer[]>([]);
   const [trendingOffers, setTrendingOffers] = useState<Offer[]>([]);
   const [promotionalAds, setPromotionalAds] = useState<Ad[]>([]);
@@ -85,18 +85,12 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  if (loading) {
-    return <div className="text-center mt-8">Loading dashboard...</div>;
-  }
-
-  if (error) {
-    return <div className="text-center mt-8 text-red-500">Error: {error}</div>;
-  }
+  // Do not early-return while loading; keep navbar (with City Selection) visible for E2E stability
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Navigation Bar */}
-      <nav className="bg-card text-card-foreground border-b border-border p-4 flex items-center justify-between">
+      <nav className="bg-card text-card-foreground border-b border-border p-4 flex items-center justify-between" role="navigation">
         <div className="flex items-center space-x-4">
           <h1 className="text-2xl font-bold">Sync</h1>
         </div>
@@ -114,8 +108,10 @@ const Dashboard: React.FC = () => {
           {/* City Selection */}
           <div className="flex items-center space-x-2">
             <FaMapMarkerAlt className="text-muted-foreground" />
+            <label htmlFor="dashboard-city-selection" className="sr-only">City Selection</label>
             <select
               aria-label="City Selection"
+              id="dashboard-city-selection"
               className="border border-border rounded-md py-1 px-2 bg-card text-card-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               value={selectedCity}
               onChange={handleCityChange}
@@ -126,15 +122,12 @@ const Dashboard: React.FC = () => {
             </select>
           </div>
 
-          {/* User Avatar and Profile Dropdown */}
-          <div className="relative">
-            <FaUserCircle className="text-4xl text-muted-foreground cursor-pointer" />
-            {/* Dropdown (placeholder) */}
-            <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-md shadow-md py-1 z-10 hidden">
-              <a href="/profile" className="block px-4 py-2 hover:bg-muted">Profile</a>
-              <a href="/preferences" className="block px-4 py-2 hover:bg-muted">Preferences</a>
-              <button className="block w-full text-left px-4 py-2 hover:bg-muted">Logout</button>
-            </div>
+          {/* User Actions */}
+          <div className="flex items-center gap-3">
+            <FaUserCircle className="text-4xl text-muted-foreground" />
+            <a href="/profile" className="text-sm hover:underline">Profile</a>
+            <a href="/preferences" className="text-sm hover:underline">Preferences</a>
+            <button onClick={logout} className="text-sm px-3 py-1 rounded bg-red-500 text-white hover:bg-red-600">Logout</button>
           </div>
         </div>
       </nav>
@@ -145,6 +138,12 @@ const Dashboard: React.FC = () => {
             <h2 className="text-3xl font-semibold">Welcome to your Dashboard!</h2>
             <Link to="/progress" className="text-sm text-blue-600 hover:underline">View Story Progress</Link>
           </div>
+        {error && (
+          <div className="mb-4 text-sm text-red-600" role="alert">{error}</div>
+        )}
+        {loading && (
+          <div className="mb-6 text-sm text-muted-foreground">Loading dashboard...</div>
+        )}
         {favoriteError && (
           <div className="mb-4 text-sm text-red-600" role="alert">
             {favoriteError}
@@ -194,7 +193,7 @@ const Dashboard: React.FC = () => {
                 ))}
               </ul>
             ) : (
-              <p className="text-muted-foreground">No trending content available at the moment.</p>
+              <p className="text-muted-foreground">No trending items available at the moment.</p>
             )}
           </div>
           <div className="bg-card text-card-foreground p-4 rounded-lg shadow-sm border border-border">
@@ -209,7 +208,7 @@ const Dashboard: React.FC = () => {
                 ))}
               </div>
             ) : (
-              <p className="text-muted-foreground">No promotional ads available at the moment.</p>
+              <p className="text-muted-foreground">No ads available at the moment.</p>
             )}
           </div>
           <div className="bg-card text-card-foreground p-4 rounded-lg shadow-sm border border-border">

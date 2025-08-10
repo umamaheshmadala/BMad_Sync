@@ -1,5 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter as Router } from 'react-router-dom';
+import { AuthProvider } from '../context/AuthContext';
 import BusinessSignUp from './business-signup';
 import * as businessAuth from '../api/business'; // Use the new business auth API
 
@@ -35,7 +36,7 @@ describe('BusinessSignUp', () => {
   });
 
   it('renders the business signup form', () => {
-    render(<Router><BusinessSignUp /></Router>);
+    render(<Router><AuthProvider><BusinessSignUp /></AuthProvider></Router>);
     expect(screen.getByRole('heading', { name: /sign up for your business account/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
@@ -43,7 +44,7 @@ describe('BusinessSignUp', () => {
   });
 
   it('allows business users to type into email and password fields', () => {
-    render(<Router><BusinessSignUp /></Router>);
+    render(<Router><AuthProvider><BusinessSignUp /></AuthProvider></Router>);
     const emailInput = screen.getByLabelText(/email address/i);
     const passwordInput = screen.getByLabelText(/password/i);
 
@@ -60,7 +61,7 @@ describe('BusinessSignUp', () => {
       session: {}, // simplified session object
     });
 
-    render(<Router><BusinessSignUp /></Router>);
+    render(<Router><AuthProvider><BusinessSignUp /></AuthProvider></Router>);
 
     fireEvent.change(screen.getByLabelText(/email address/i), { target: { value: 'business@example.com' } });
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'businesspassword123' } });
@@ -76,7 +77,7 @@ describe('BusinessSignUp', () => {
     const errorMessage = 'This email is already registered. Please try logging in with your business account.';
     jest.spyOn(businessAuth, 'signUpBusiness').mockRejectedValueOnce(new Error(errorMessage));
 
-    render(<Router><BusinessSignUp /></Router>);
+    render(<Router><AuthProvider><BusinessSignUp /></AuthProvider></Router>);
 
     fireEvent.change(screen.getByLabelText(/email address/i), { target: { value: 'business@example.com' } });
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'businesspassword123' } });
@@ -92,7 +93,7 @@ describe('BusinessSignUp', () => {
     const errorMessage = 'Password must be at least 6 characters long.';
     jest.spyOn(businessAuth, 'signUpBusiness').mockRejectedValueOnce(new Error(errorMessage));
 
-    render(<Router><BusinessSignUp /></Router>);
+    render(<Router><AuthProvider><BusinessSignUp /></AuthProvider></Router>);
 
     fireEvent.change(screen.getByLabelText(/email address/i), { target: { value: 'business@example.com' } });
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: '123' } });

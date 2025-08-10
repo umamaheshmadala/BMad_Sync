@@ -8,6 +8,10 @@
     <link rel="stylesheet" href="/src/index.compiled.css" />
   </head>
   <body class="bg-background text-foreground">
+    <script type="module">
+      // Bridge Vite env to global before React renders so mock mode is reliable in E2E
+      try { window.__VITE_E2E_MOCK__ = (import.meta.env?.VITE_E2E_MOCK === '1'); } catch {}
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

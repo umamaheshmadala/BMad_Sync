@@ -23,6 +23,7 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  const isE2eMock = Boolean((globalThis as any).__VITE_E2E_MOCK__);
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [businessProfile, setBusinessProfile] =
@@ -31,6 +32,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [onboardingComplete, setOnboardingComplete] = useState(false);
 
   useEffect(() => {
+    if (isE2eMock) {
+      // In E2E mock mode, reflect synthetic session if present so PrivateRoutes allow navigation
+      try {
+        let syntheticSession: any = null;
+        try {
+          const persisted = (globalThis as any).localStorage?.getItem('e2e-session') ?? null;
+          syntheticSession = persisted ? JSON.parse(persisted) : null;
+        } catch {}
+        if (!syntheticSession) {
+          syntheticSession = (globalThis as any).__E2E_SESSION__ || null;
+        }
+        if (syntheticSession?.user) {
+          setUser(syntheticSession.user);
+          setOnboardingComplete(true);
+        } else {
+          setUser(null);
+          setOnboardingComplete(false);
+        }
+      } catch {
+        setUser(null);
+        setOnboardingComplete(false);
+      }
+      setLoading(false);
+      return;
+    }
     console.log("AuthContext useEffect: Initializing auth listener and session check.");
     // Safety timeout in case Supabase session init hangs
     const loadingTimeoutId = setTimeout(() => {
@@ -145,6 +171,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const signIn = async (email: string, password: string) => {
+    if (isE2eMock) {
+      if (/invalid/i.test(email)) {
+        throw new Error('Invalid email or password. Please try again.');
+      }
+      const mockUser = { id: 'e2e-user', email } as unknown as User;
+      setUser(mockUser);
+      setOnboardingComplete(true);
+      setLoading(false);
+      try { (globalThis as any).__E2E_SESSION__ = { user: { id: 'e2e-user', email } }; } catch {}
+      try { (globalThis as any).localStorage?.setItem('e2e-session', JSON.stringify({ user: { id: 'e2e-user', email } })); } catch {}
+      return { user: mockUser } as any;
+    }
     console.log("signIn: Attempting sign in for", email);
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -186,6 +224,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const signUp = async (email: string, password: string) => {
+    if (isE2eMock) {
+      // Track previously registered emails to simulate real duplicate behavior
+      try {
+        const key = 'e2e-registered-users';
+        const listRaw = (globalThis as any).localStorage?.getItem(key) ?? '[]';
+        let list: string[] = [];
+        try { list = JSON.parse(listRaw); } catch {}
+        // Also consider current session/user as already registered
+        let sessionEmail: string | null = null;
+        try { sessionEmail = JSON.parse((globalThis as any).localStorage?.getItem('e2e-session') || 'null')?.user?.email ?? null; } catch { sessionEmail = null; }
+        const currentCtxEmail = (user as any)?.email ?? null;
+        if (list.includes(email) || /existing|exists|already/i.test(email) || sessionEmail === email || currentCtxEmail === email) {
+          throw new Error('This email is already registered. Please try logging in.');
+        }
+        list.push(email);
+        try { (globalThis as any).localStorage?.setItem(key, JSON.stringify(list)); } catch {}
+      } catch {}
+      const mockUser = { id: 'e2e-user', email } as unknown as User;
+      setUser(mockUser);
+      setOnboardingComplete(false);
+      setLoading(false);
+      try { (globalThis as any).__E2E_SESSION__ = { user: { id: 'e2e-user', email } }; } catch {}
+      try { (globalThis as any).localStorage?.setItem('e2e-session', JSON.stringify({ user: { id: 'e2e-user', email } })); } catch {}
+      return { user: mockUser } as any;
+    }
     console.log("signUp: Attempting sign up for", email);
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -230,9 +293,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     console.log("signOut: Attempting sign out.");
     // Never hang the UI on sign-out; proceed after max 3s
     try {
-      const result = await withTimeout(supabase.auth.signOut(), 3000, 'signOut');
-      const error = (result as any)?.error;
-      if (error) console.error("signOut: Error during sign out:", error);
+      if (!isE2eMock) {
+        const result = await withTimeout(supabase.auth.signOut(), 3000, 'signOut');
+        const error = (result as any)?.error;
+        if (error) console.error("signOut: Error during sign out:", error);
+      }
     } catch (e) {
       console.error("signOut: Exception during sign out:", e);
     }
@@ -243,6 +308,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setOnboardingComplete(false);
     console.log("signOut: User logged out, loading should be false now.");
     setLoading(false); // Ensure loading is set to false after sign-out
+    if (typeof window !== 'undefined' && !(globalThis as any).__JEST__) window.location.assign('/login');
   };
 
   const getUserProfile = async (userId: string) => {

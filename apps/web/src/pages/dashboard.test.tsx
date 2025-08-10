@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import Dashboard from '../pages/dashboard';
+import { BrowserRouter } from 'react-router-dom';
 import * as favoritesApi from '../api/favorites';
 import { AuthContext } from '../context/AuthContext';
 import { getDashboardData } from '../api/dashboard';
@@ -32,9 +33,11 @@ describe('Dashboard', () => {
     mockGetDashboardData.mockImplementation(() => new Promise(() => {})); // Never resolve to keep it in loading state
 
     render(
-      <AuthContext.Provider value={{ ...mockAuthContextValue, loading: true }}>
-        <Dashboard />
-      </AuthContext.Provider>
+      <BrowserRouter>
+        <AuthContext.Provider value={{ ...mockAuthContextValue, loading: true }}>
+          <Dashboard />
+        </AuthContext.Provider>
+      </BrowserRouter>
     );
     expect(screen.getByText('Loading dashboard...')).toBeInTheDocument();
   });
@@ -49,9 +52,11 @@ describe('Dashboard', () => {
     (favoritesApi.getFavorites as jest.Mock).mockResolvedValue({ businesses: [], coupons: [] });
 
     render(
-      <AuthContext.Provider value={mockAuthContextValue}>
-        <Dashboard />
-      </AuthContext.Provider>
+      <BrowserRouter>
+        <AuthContext.Provider value={mockAuthContextValue}>
+          <Dashboard />
+        </AuthContext.Provider>
+      </BrowserRouter>
     );
 
     await waitFor(() => {
@@ -74,9 +79,11 @@ describe('Dashboard', () => {
     (favoritesApi.unfavoriteCoupon as jest.Mock).mockRejectedValue(new Error('fail'));
 
     render(
-      <AuthContext.Provider value={mockAuthContextValue}>
-        <Dashboard />
-      </AuthContext.Provider>
+      <BrowserRouter>
+        <AuthContext.Provider value={mockAuthContextValue}>
+          <Dashboard />
+        </AuthContext.Provider>
+      </BrowserRouter>
     );
 
     // Wait for dashboard to render
@@ -101,13 +108,15 @@ describe('Dashboard', () => {
     mockGetDashboardData.mockRejectedValue(new Error('Network error'));
 
     render(
-      <AuthContext.Provider value={mockAuthContextValue}>
-        <Dashboard />
-      </AuthContext.Provider>
+      <BrowserRouter>
+        <AuthContext.Provider value={mockAuthContextValue}>
+          <Dashboard />
+        </AuthContext.Provider>
+      </BrowserRouter>
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/Error: Failed to fetch dashboard data./i)).toBeInTheDocument();
+      expect(screen.getByRole('alert')).toHaveTextContent('Failed to fetch dashboard data.');
     });
   });
 
@@ -121,9 +130,11 @@ describe('Dashboard', () => {
     });
 
     render(
-      <AuthContext.Provider value={mockAuthContextValue}>
-        <Dashboard />
-      </AuthContext.Provider>
+      <BrowserRouter>
+        <AuthContext.Provider value={mockAuthContextValue}>
+          <Dashboard />
+        </AuthContext.Provider>
+      </BrowserRouter>
     );
 
     await waitFor(() => {

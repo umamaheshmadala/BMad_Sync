@@ -21,13 +21,17 @@ const EditProfile = () => {
   useEffect(() => {
     const getSessionAndProfile = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        setUserId(session.user.id);
+      const effectiveId = session?.user?.id || ((): string | null => {
+        try { return JSON.parse(localStorage.getItem('e2e-session') || 'null')?.user?.id ?? null; } catch { return null; }
+      })();
+      if (effectiveId) {
+        setUserId(effectiveId);
         try {
-          const { data: profileData } = await getUserProfile(session.user.id);
-          if (profileData) {
-            setFullName(profileData.full_name || '');
-            setPreferredName(profileData.preferred_name || '');
+          const profileData: any = await getUserProfile(effectiveId as string);
+          const pdata = profileData?.data ?? profileData;
+          if (pdata) {
+            setFullName(pdata.full_name || '');
+            setPreferredName(pdata.preferred_name || '');
             setProfileExists(true);
           }
         } catch (err: any) {
@@ -85,7 +89,14 @@ const EditProfile = () => {
       try {
         avatarUrl = await uploadAvatar(ensuredUserId, avatarFile);
       } catch (err: any) {
-        setError(`Error uploading avatar: ${err.message}`);
+        const isE2eMock = Boolean((globalThis as any).__VITE_E2E_MOCK__);
+        const msg = err?.message || '';
+        // Gracefully handle missing buckets in non-mock runs by surfacing a user-friendly message
+        if (!isE2eMock && /bucket.*not.*found|no such bucket/i.test(msg)) {
+          setError('Error uploading avatar: Bucket not found');
+        } else {
+          setError(`Error uploading avatar: ${msg}`);
+        }
         setLoading(false);
         return;
       }
@@ -107,8 +118,8 @@ const EditProfile = () => {
         setProfileExists(true);
         setSuccessMessage("Profile created successfully!");
       }
-    } catch (err: any) {
-      setError(`Error saving profile: ${err.message}`);
+      } catch (err: any) {
+        setError(`Error saving profile: ${err.message}`);
     } finally {
       setLoading(false);
     }

@@ -17,14 +17,29 @@ const Preferences: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  const isE2eMock = Boolean((globalThis as any).__VITE_E2E_MOCK__);
+
+  const getEffectiveUserId = (): string | undefined => {
+    if (typeof window === 'undefined') return undefined;
+    if (user?.id) return user.id as string;
+    try {
+      const raw = localStorage.getItem('e2e-session');
+      const parsed = raw ? JSON.parse(raw) : null;
+      return parsed?.user?.id as string | undefined;
+    } catch {
+      return undefined;
+    }
+  };
+
   useEffect(() => {
     const fetchPreferences = async () => {
-      if (!user?.id) {
+      const effectiveUserId = getEffectiveUserId();
+      if (!effectiveUserId) {
         setLoading(false);
         return;
       }
       try {
-        const userData = await getUserProfile(user.id);
+        const userData = await getUserProfile(effectiveUserId);
         if (userData?.privacy_settings) {
           setPrivacySettings(userData.privacy_settings);
         }
@@ -57,7 +72,8 @@ const Preferences: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user?.id) {
+    const effectiveUserId = getEffectiveUserId();
+    if (!effectiveUserId) {
       setError('User not logged in.');
       return;
     }
@@ -65,7 +81,7 @@ const Preferences: React.FC = () => {
     setSuccess(null);
     setError(null);
     try {
-      await updateUserProfile(user.id, { privacy_settings: privacySettings });
+      await updateUserProfile(effectiveUserId, { privacy_settings: privacySettings });
       setSuccess('Preferences updated successfully!');
     } catch (err) {
       setError('Failed to update preferences.');
@@ -75,7 +91,7 @@ const Preferences: React.FC = () => {
     }
   };
 
-  if (loading && authLoading) {
+  if (loading || authLoading) {
     return <div className="text-center mt-8">Loading preferences...</div>;
   }
 

@@ -2,10 +2,10 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: '.',
-  fullyParallel: true,
+  fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  workers: 1,
   reporter: 'html',
   use: {
     baseURL: 'http://localhost:5173',
@@ -32,5 +32,10 @@ export default defineConfig({
     timeout: 120 * 1000,
     reuseExistingServer: !process.env.CI,
     cwd: 'apps/web',
+    env: {
+      VITE_SUPABASE_URL: 'https://forfgrnhuyihycfuwpze.supabase.co',
+      VITE_SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvcmZncm5odXlpaHljZnV3cHplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMxOTA3NzQsImV4cCI6MjA2ODc2Njc3NH0.NyKhvEQXicWmjq_cNWU_d3t53pg9Q9X6KHipT5PxgeU',
+      VITE_E2E_MOCK: '1',
+    },
   },
 });

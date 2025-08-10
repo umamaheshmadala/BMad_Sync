@@ -39,8 +39,8 @@ export default defineConfig({
   },
   server: {
     open: false, // Do not auto-open via Vite; handled by plugin above
-    // Optional: uncomment to force using 5173 and fail fast if taken
-    // port: 5173,
-    // strictPort: true,
+    // Force using 5173 for Playwright expectations
+    port: 5173,
+    strictPort: true,
   },
 })

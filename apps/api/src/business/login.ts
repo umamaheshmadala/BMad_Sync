@@ -43,13 +43,16 @@ export async function handleBusinessLogin(req: Request, supabaseClient: Supabase
   }
 }
 
-// Only serve if the script is run directly (not imported)
-if (import.meta.main) {
-  const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
-  const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') || '';
-  const defaultSupabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-  Deno.serve(async (req) => {
-    return handleBusinessLogin(req, defaultSupabase);
-  });
+// Serve in Deno runtime when available (avoid import.meta for Jest compatibility)
+try {
+  // @ts-ignore - Deno is available only in edge/runtime
+  if (typeof Deno !== 'undefined' && typeof Deno.serve === 'function') {
+    const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
+    const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') || '';
+    const defaultSupabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // @ts-ignore
+    Deno.serve(async (req: Request) => handleBusinessLogin(req, defaultSupabase));
+  }
+} catch {
+  // no-op in non-Deno environments
 }

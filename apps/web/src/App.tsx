@@ -14,9 +14,17 @@ import Dashboard from './pages/dashboard';
 import OnboardingRoute from './components/OnboardingRoute';
 import CouponWalletPage from './pages/coupon-wallet';
 import ProgressPage from './pages/progress';
+import ProfilePage from './pages/profile';
+import PreferencesPage from './pages/preferences';
+import EditProfilePage from './pages/edit-profile';
+import BusinessProfilePage from './pages/business-profile';
+import EditBusinessProfilePage from './pages/edit-business-profile';
+import BusinessStorefrontPage from './pages/business-storefront';
+import EditBusinessStorefrontPage from './pages/edit-business-storefront';
 
 function App() {
   const { user, loading, logout } = useAuth();
+  const isE2eMock = Boolean((globalThis as any).__VITE_E2E_MOCK__);
 
   const handleLogout = async () => {
     await logout();
@@ -24,7 +32,7 @@ function App() {
     window.location.href = '/login';
   };
 
-  if (loading) {
+  if (loading && !isE2eMock) {
     return <div>Loading authentication...</div>;
   }
 
@@ -42,6 +50,12 @@ function App() {
               </li>
               <li>
                 <Link to="/login" className="hover:text-primary transition-colors duration-200">Login</Link>
+              </li>
+              <li>
+                <Link to="/business-signup" className="hover:text-primary transition-colors duration-200">Business Sign Up</Link>
+              </li>
+              <li>
+                <Link to="/business-login" className="hover:text-primary transition-colors duration-200">Business Login</Link>
               </li>
             </>
           )}
@@ -88,6 +102,30 @@ function App() {
             }
           />
           <Route
+            path="/profile"
+            element={
+              <PrivateRoute>
+                <ProfilePage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/preferences"
+            element={
+              <PrivateRoute>
+                <PreferencesPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/edit-profile"
+            element={
+              <PrivateRoute>
+                <EditProfilePage />
+              </PrivateRoute>
+            }
+          />
+          <Route
             path="/progress"
             element={
               <PrivateRoute>
@@ -108,6 +146,38 @@ function App() {
             element={
               <BusinessPrivateRoute>
                 <h1>Business Dashboard (Protected)</h1>
+              </BusinessPrivateRoute>
+            }
+          />
+          <Route
+            path="/business-profile"
+            element={
+              <BusinessPrivateRoute>
+                <BusinessProfilePage />
+              </BusinessPrivateRoute>
+            }
+          />
+          <Route
+            path="/edit-business-profile"
+            element={
+              <BusinessPrivateRoute>
+                <EditBusinessProfilePage />
+              </BusinessPrivateRoute>
+            }
+          />
+          <Route
+            path="/business-storefront"
+            element={
+              <BusinessPrivateRoute>
+                <BusinessStorefrontPage />
+              </BusinessPrivateRoute>
+            }
+          />
+          <Route
+            path="/edit-business-storefront"
+            element={
+              <BusinessPrivateRoute>
+                <EditBusinessStorefrontPage />
               </BusinessPrivateRoute>
             }
           />

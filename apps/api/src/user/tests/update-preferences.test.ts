@@ -1,9 +1,15 @@
 import { assert, assertEquals } from "https://deno.land/std/assert/mod.ts";
 import { stub, restore } from "https://deno.land/std/mock/mod.ts";
+
+let mockSupabase: any;
+
+jest.mock("https://esm.sh/@supabase/supabase-js@2", () => ({
+  createClient: () => mockSupabase,
+}));
+
 import updatePreferencesHandler from "../update-preferences.ts";
 
 describe("update-preferences Edge Function", () => {
-  let mockSupabase: any;
   let mockContext: any;
 
   beforeEach(() => {

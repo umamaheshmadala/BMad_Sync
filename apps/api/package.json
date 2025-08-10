@@ -4,7 +4,7 @@
   "description": "Backend API for SynC project (Supabase Edge Functions/Netlify Functions)",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest --config ./jest.config.cjs"
   },
   "keywords": [],
   "author": "",

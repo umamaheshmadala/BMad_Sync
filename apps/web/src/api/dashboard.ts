@@ -1,6 +1,21 @@
 import { supabase } from '../lib/supabaseClient';
 
 export const getDashboardData = async (userId: string, city: string) => {
+  if ((globalThis as any).__VITE_E2E_MOCK__) {
+    const effectiveCity = city || 'london';
+    return {
+      user: { user_id: userId, city: effectiveCity, interests: [], privacy_settings: null },
+      hotOffers: [
+        { id: 1, title: `50% off Pizza in ${effectiveCity}`, description: 'Get half off all pizzas at Pizza Palace!' },
+      ],
+      trendingOffers: [
+        { id: 101, title: `New Burger Joint in ${effectiveCity}`, description: 'Try the new gourmet burgers at The Burger Spot.' },
+      ],
+      promotionalAds: [
+        { id: 201, title: `Summer Sale at Fashion Hub in ${effectiveCity}`, imageUrl: 'https://example.com/ad1.jpg' },
+      ],
+    };
+  }
   try {
     // Use maybeSingle to avoid throwing when no row exists yet
     const { data, error } = await supabase

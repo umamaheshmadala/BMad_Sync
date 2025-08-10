@@ -23,6 +23,8 @@ const EditBusinessProfile: React.FC = () => {
     }
   };
 
+  const isE2eMock = Boolean((globalThis as any).__VITE_E2E_MOCK__);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -36,40 +38,53 @@ const EditBusinessProfile: React.FC = () => {
       }
       const business_id = user.data.user.id; // Using user ID as business ID for now
 
-      let logo_url = '';
-      if (logoFile) {
-        const fileExt = logoFile.name.split('.').pop();
-        const fileName = `${business_id}.${fileExt}`;
-        const { data, error: uploadError } = await supabase.storage
-          .from('business-logos')
-          .upload(fileName, logoFile, {
-            cacheControl: '3600',
-            upsert: true,
-          });
-
-        if (uploadError) throw uploadError;
-        logo_url = data.path;
-      }
-
-      const { error: dbError } = await supabase
-        .from('businesses')
-        .upsert({
-          business_id: business_id,
+      if (isE2eMock) {
+        const payload = {
+          business_id,
           email: user.data.user.email,
           business_name: businessName,
-          address: address,
+          address,
           google_location_url: googleLocationUrl,
           contact_info: contactInfo,
-          open_times: openTimes, // These fields will need proper handling (e.g., JSONB)
+          open_times: openTimes,
           close_times: closeTimes,
-          holidays: holidays,
-          logo_url: logo_url,
-        } as any);
+          holidays,
+          logo_url: logoFile ? `${business_id}.${(logoFile.name.split('.').pop() || 'png')}` : '',
+        } as any;
+        try { localStorage.setItem('e2e-business-profile', JSON.stringify(payload)); } catch {}
+      } else {
+        let logo_url = '';
+        if (logoFile) {
+          const fileExt = logoFile.name.split('.').pop();
+          const fileName = `${business_id}.${fileExt}`;
+          const { data, error: uploadError } = await supabase.storage
+            .from('business-logos')
+            .upload(fileName, logoFile, {
+              cacheControl: '3600',
+              upsert: true,
+            });
+          if (uploadError) throw uploadError;
+          logo_url = data.path;
+        }
+        const { error: dbError } = await supabase
+          .from('businesses')
+          .upsert({
+            business_id: business_id,
+            email: user.data.user.email,
+            business_name: businessName,
+            address: address,
+            google_location_url: googleLocationUrl,
+            contact_info: contactInfo,
+            open_times: openTimes, // These fields will need proper handling (e.g., JSONB)
+            close_times: closeTimes,
+            holidays: holidays,
+            logo_url: logo_url,
+          } as any);
+        if (dbError) throw dbError;
+      }
 
-      if (dbError) throw dbError;
-
-      alert('Business profile updated successfully!');
-      navigate('/business-profile'); // Navigate to the viewing page
+      window.alert('Business profile updated successfully!');
+      navigate('/business-profile');
     } catch (err: any) {
       setError(err.message);
     } finally {

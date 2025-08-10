@@ -15,7 +15,7 @@ serve(async (req) => {
     if (req.method === 'POST' && path === '/api/business/profile') {
       const { business_id, email, business_name, address, google_location_url, contact_info, open_times, close_times, holidays, logo_url } = await req.json();
 
-      const { data, error } = await supabase
+      const result = await supabase
         .from('businesses')
         .upsert({
           business_id,
@@ -30,6 +30,9 @@ serve(async (req) => {
           logo_url,
           created_at: new Date().toISOString(),
         });
+
+      const data = (result && 'data' in result) ? (result as any).data : undefined;
+      const error = (result && 'error' in result) ? (result as any).error : undefined;
 
       if (error) throw error;
 
@@ -48,11 +51,14 @@ serve(async (req) => {
         });
       }
 
-      const { data, error } = await supabase
+      const result = await supabase
         .from('businesses')
         .select('*')
         .eq('business_id', business_id)
         .single();
+
+      const data = (result && 'data' in result) ? (result as any).data : undefined;
+      const error = (result && 'error' in result) ? (result as any).error : undefined;
 
       if (error) throw error;
       if (!data) {

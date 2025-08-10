@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { getBusinessProfile } from '../api/business';
 import { BusinessProfile } from '@sync/shared-types';
 import { useNavigate } from 'react-router-dom';
 
@@ -9,34 +10,41 @@ const BusinessProfilePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
+  const isE2eMock = Boolean((globalThis as any).__VITE_E2E_MOCK__);
+
   useEffect(() => {
     const fetchBusinessProfile = async () => {
       try {
-        const user = await supabase.auth.getUser();
-        if (!user.data.user) {
-          throw new Error('User not logged in');
+        if (isE2eMock) {
+          // Synchronous fast-path in mock mode
+          try {
+            const raw = localStorage.getItem('e2e-business-profile');
+            setBusinessProfile(raw ? JSON.parse(raw) : null);
+          } catch {
+            setBusinessProfile(null);
+          }
+          setLoading(false);
+          return;
+        } else {
+          const user = await supabase.auth.getUser();
+          if (!user.data.user) {
+            throw new Error('User not logged in');
+          }
+          const business_id = user.data.user.id; // Assuming user ID as business ID
+          const data = await getBusinessProfile(business_id);
+          setBusinessProfile(data as any);
         }
-        const business_id = user.data.user.id; // Assuming user ID as business ID
-
-        const response = await fetch(`/api/business/profile?business_id=${business_id}`);
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to fetch business profile');
-        }
-
-        setBusinessProfile(data);
       } catch (err: any) {
         setError(err.message);
       } finally {
-        setLoading(false);
+        if (!isE2eMock) setLoading(false);
       }
     };
 
     fetchBusinessProfile();
   }, []);
 
-  if (loading) {
+  if (loading && !isE2eMock) {
     return <div className="min-h-screen flex items-center justify-center bg-gray-100">Loading business profile...</div>;
   }
 
@@ -99,6 +107,9 @@ const BusinessProfilePage: React.FC = () => {
         >
           Edit Profile
         </button>
+        {isE2eMock && (
+          <div className="mt-4 text-xs text-gray-500 text-center">Mock mode</div>
+        )}
       </div>
     </div>
   );

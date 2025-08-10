@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { login } from '../api/auth';
+import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { signInWithGoogle } from '../api/auth';
 
@@ -8,13 +9,15 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { signIn } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     try {
-      await login(email, password);
-      navigate('/'); // Redirect to home page after successful login
+      // Always go through AuthContext (handles mock mode)
+      await signIn(email, password);
+      // Navigation is handled by PrivateRoute/root route; no immediate redirect here
     } catch (err: any) {
       setError(err.message);
     }

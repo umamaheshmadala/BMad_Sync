@@ -1,6 +1,11 @@
 import { supabase } from '../lib/supabaseClient';
 
+const isE2eMock = Boolean((globalThis as any).__VITE_E2E_MOCK__);
+
 export const uploadAvatar = async (userId: string, file: File) => {
+  if (isE2eMock) {
+    return `http://localhost/avatars/${userId}.png`;
+  }
   const fileExt = file.name.split('.').pop();
   const fileName = `${userId}.${fileExt}`;
   const filePath = `avatars/${fileName}`;
@@ -28,6 +33,18 @@ interface UserProfileData {
 }
 
 export const createUserProfile = async (profileData: UserProfileData) => {
+  if (isE2eMock) {
+    localStorage.setItem('e2e-user-profile', JSON.stringify({
+      user_id: profileData.userId,
+      full_name: profileData.fullName ?? '',
+      preferred_name: profileData.preferredName ?? '',
+      avatar_url: profileData.avatarUrl ?? '',
+      city: 'london',
+      interests: ['Food','Tech','Sports','Movies','Books'],
+      privacy_settings: { adFrequency: 'medium', excludeCategories: [] },
+    }));
+    return { success: true } as any;
+  }
   const response = await fetch('/api/user/create', {
     method: 'POST',
     headers: {
@@ -59,6 +76,13 @@ interface UserProfileUpdateData {
 }
 
 export const updateUserProfile = async (userId: string, profileData: UserProfileUpdateData) => {
+  if (isE2eMock) {
+    const existingRaw = localStorage.getItem('e2e-user-profile');
+    const existing = existingRaw ? JSON.parse(existingRaw) : { user_id: userId };
+    const merged = { ...existing, ...profileData };
+    localStorage.setItem('e2e-user-profile', JSON.stringify(merged));
+    return { success: true } as any;
+  }
   const response = await fetch(`/api/user/preferences?userId=${userId}`, {
     method: 'PUT',
     headers: {
@@ -76,6 +100,19 @@ export const updateUserProfile = async (userId: string, profileData: UserProfile
 };
 
 export const getUserProfile = async (userId: string) => {
+  if (isE2eMock) {
+    const raw = localStorage.getItem('e2e-user-profile');
+    if (raw) return JSON.parse(raw);
+    return {
+      user_id: userId,
+      email: 'e2e@example.com',
+      full_name: 'E2E User',
+      preferred_name: 'E2E',
+      city: 'london',
+      interests: ['Food','Tech','Sports','Movies','Books'],
+      privacy_settings: { adFrequency: 'medium', excludeCategories: [] },
+    } as any;
+  }
   const response = await fetch(`/api/user/get?userId=${userId}`, {
     method: 'GET',
     headers: {
