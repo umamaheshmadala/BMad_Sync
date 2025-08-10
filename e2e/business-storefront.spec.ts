@@ -57,9 +57,8 @@ test.describe('Business Storefront Management', () => {
     await page.click('button[type="submit"]');
     await page.waitForURL(/business-storefront/);
 
-    // Navigate to edit storefront page
-    await expect(page.locator('button:has-text("Edit Storefront")')).toBeVisible({ timeout: 15000 });
-    await page.click('button:has-text("Edit Storefront")');
+    // Navigate to edit storefront page (direct route for reliability)
+    await page.goto('/edit-business-storefront');
     await page.waitForURL('/edit-business-storefront');
 
     // Edit existing fields

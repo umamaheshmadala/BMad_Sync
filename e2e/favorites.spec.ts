@@ -79,7 +79,7 @@ test.describe('Favorites Flow', () => {
     await page.evaluate(() => { (window as any).__E2E_SESSION__ = { user: { id: 'test-user-id', email: 'test@example.com' } }; localStorage.setItem('e2e-session', JSON.stringify((window as any).__E2E_SESSION__)); });
     await page.reload();
     await page.goto('/dashboard');
-    await expect(page.getByText('Welcome to your Dashboard!')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('heading', { name: /Welcome to your Dashboard!/i })).toBeVisible({ timeout: 15000 });
   });
 
   test('user can favorite a coupon from dashboard', async ({ page }) => {
