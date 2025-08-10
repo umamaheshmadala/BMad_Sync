@@ -34,9 +34,9 @@ test.describe('User Profile Flow', () => {
     // Our profile page heading is "Business Profile" for business; for user profiles, check alternative text
     const userHeading = page.getByRole('heading', { name: /User Profile/i });
     const bizHeading = page.getByRole('heading', { name: /Business Profile/i });
-    if (!(await userHeading.isVisible({ timeout: 3000 }).catch(() => false))) {
-      await expect(bizHeading).toBeVisible();
-    }
+    const eitherVisible = await userHeading.isVisible({ timeout: 2000 }).catch(() => false)
+      || await bizHeading.isVisible({ timeout: 2000 }).catch(() => false);
+    expect(eitherVisible).toBeTruthy();
     // Loosen assertions in mock mode to check presence of profile container text
     await expect(page.locator('text=Address:').first()).toBeVisible();
     // Avatar may not render in mock mode; skip strict check

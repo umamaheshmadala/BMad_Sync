@@ -61,6 +61,6 @@ test.describe('Dashboard and Preferences', () => {
     // Re-navigate to check if changes persisted (optional, but good for robustness)
     await page.reload();
     await expect(page.getByLabel('Ad Frequency:')).toHaveValue('low');
-    await expect(page.getByLabelText('Shopping')).toBeChecked();
+    await expect(page.getByLabel('Shopping')).toBeChecked();
   });
 });

@@ -54,7 +54,13 @@ test.describe('Authentication Flow', () => {
     const email = `logout-${Date.now()}@example.com`;
     await signupAndCompleteOnboarding(page, email, 'password123');
     await expect(page).toHaveURL(/dashboard/);
-    await page.getByRole('button', { name: /Logout/i }).click();
+    // Disambiguate logout button
+    const navLogout = page.getByRole('navigation').getByRole('button', { name: /Logout/i }).first();
+    if (await navLogout.isVisible().catch(() => false)) {
+      await navLogout.click();
+    } else {
+      await page.getByRole('button', { name: /Logout/i }).first().click();
+    }
     await expect(page).toHaveURL(/login/);
   });
 });
