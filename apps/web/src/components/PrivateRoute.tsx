@@ -4,8 +4,10 @@ import { Navigate } from 'react-router-dom';
 
 const PrivateRoute = ({ children }: { children: JSX.Element }) => {
   const { user, loading, onboardingComplete } = useAuth();
-  const isE2eMock = Boolean((globalThis as any).__VITE_E2E_MOCK__);
+  const runtimeMock = Boolean((globalThis as any).__VITE_E2E_MOCK__);
+  const envMock = (() => { try { return ((import.meta as any)?.env?.VITE_E2E_MOCK === '1'); } catch { return false; } })();
   const hasSyntheticSession = typeof window !== 'undefined' && !!window.localStorage?.getItem('e2e-session');
+  const isE2eMock = runtimeMock || envMock || hasSyntheticSession;
 
   if (isE2eMock || hasSyntheticSession) {
     return children;
