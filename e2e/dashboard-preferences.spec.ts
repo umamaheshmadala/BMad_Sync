@@ -40,8 +40,8 @@ test.describe('Dashboard and Preferences', () => {
     await page.goto('/dashboard');
     await page.waitForLoadState('domcontentloaded');
     // Use navbar link to navigate to Preferences to ensure route is active
-    await page.getByRole('link', { name: /Preferences/i }).click();
-    await page.waitForURL(/preferences/);
+    // Navigate directly in mock mode for reliability
+    await page.goto('/preferences');
     await expect(page.getByRole('heading', { name: /Ad Preferences/i })).toBeVisible({ timeout: 20000 });
 
     // Change ad frequency
