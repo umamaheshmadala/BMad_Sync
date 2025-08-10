@@ -17,11 +17,32 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const isE2eMock = Boolean((globalThis as any).__VITE_E2E_MOCK__);
+
   useEffect(() => {
     const fetchProfile = async () => {
       setLoading(true);
       setError(null);
       try {
+        if (isE2eMock) {
+          try {
+            const raw = localStorage.getItem('e2e-user-profile');
+            if (raw) {
+              setProfile(JSON.parse(raw));
+            } else {
+              setProfile({
+                full_name: 'E2E User',
+                preferred_name: 'E2E',
+                avatar_url: '',
+                city: 'london',
+                interests: ['Food','Tech'],
+              } as any);
+            }
+            return;
+          } finally {
+            setLoading(false);
+          }
+        }
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
           const userId = session.user.id;
@@ -33,7 +54,7 @@ const Profile = () => {
       } catch (err: any) {
         setError(`Error fetching profile: ${err.message}`);
       } finally {
-        setLoading(false);
+        if (!isE2eMock) setLoading(false);
       }
     };
     fetchProfile();

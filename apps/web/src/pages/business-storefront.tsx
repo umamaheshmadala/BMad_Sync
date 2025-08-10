@@ -79,14 +79,18 @@ const BusinessStorefrontPage: React.FC = () => {
   if (!storefront) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="text-center">
-          <p>No storefront found. Please create one.</p>
+        <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md text-center">
+          <h2 className="text-2xl font-bold mb-6">Your Storefront</h2>
+          <p className="text-gray-700">No storefront found. Please create one.</p>
           <button
             onClick={() => navigate('/edit-business-storefront')}
             className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
           >
             Create Storefront
           </button>
+          {isE2eMock && (
+            <div className="mt-4 text-xs text-gray-500">Mock mode</div>
+          )}
         </div>
       </div>
     );
