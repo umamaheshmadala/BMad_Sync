@@ -7,6 +7,20 @@ if (typeof global.TextEncoder === 'undefined') {
   global.TextEncoder = TextEncoder;
 }
 
+// Polyfill URL.createObjectURL for jsdom environment used in tests
+if (typeof (global as any).URL === 'undefined') {
+  // @ts-ignore
+  (global as any).URL = {};
+}
+if (!(global as any).URL.createObjectURL) {
+  // @ts-ignore
+  (global as any).URL.createObjectURL = jest.fn(() => 'blob://mock');
+}
+if (!(global as any).URL.revokeObjectURL) {
+  // @ts-ignore
+  (global as any).URL.revokeObjectURL = jest.fn();
+}
+
 // Ensure window.alert is a mock function for tests
 // @ts-ignore
 window.alert = jest.fn();

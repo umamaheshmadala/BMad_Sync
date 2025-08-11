@@ -10,10 +10,13 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 serve(async (req) => {
   try {
     const url = new URL(req.url);
-    const pathParts = url.pathname.split('/');
+    const pathParts = url.pathname.split('/'); // ['', 'api', 'storefronts', ':id', 'products']
 
-    if (req.method === 'POST' && pathParts[3] === 'products') {
-      const storefront_id = pathParts[2];
+    const isStorefrontProductsPath =
+      pathParts.length >= 5 && pathParts[1] === 'api' && pathParts[2] === 'storefronts' && pathParts[4] === 'products';
+
+    if (req.method === 'POST' && isStorefrontProductsPath) {
+      const storefront_id = pathParts[3];
       const { products } = await req.json();
 
       if (!storefront_id) {
@@ -51,8 +54,8 @@ serve(async (req) => {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       });
-    } else if (req.method === 'GET' && pathParts[3] === 'products') {
-      const storefront_id = pathParts[2];
+    } else if (req.method === 'GET' && isStorefrontProductsPath) {
+      const storefront_id = pathParts[3];
 
       if (!storefront_id) {
         return new Response(JSON.stringify({ error: 'Storefront ID is required' }), {
